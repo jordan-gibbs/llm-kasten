@@ -83,7 +83,7 @@ def tag_suggest(
     popular = [t for t in tags if t[1] >= 3]
     singletons = [t for t in tags if t[1] == 1]
 
-    for stag, scount in singletons:
+    for stag, _scount in singletons:
         for ptag, pcount in popular:
             sim = SequenceMatcher(None, stag, ptag).ratio()
             if sim >= threshold and stag != ptag:
@@ -109,4 +109,4 @@ def tag_suggest(
                 f"  {s['singleton']:30s} -> {s['suggested_canonical']:20s} "
                 f"({s['similarity']:.0%} similar, {s['canonical_count']} notes)"
             )
-        console.print(f"\n[dim]Apply with: kasten tag alias <from> <to>[/]")
+        console.print("\n[dim]Apply with: kasten tag alias <from> <to>[/]")

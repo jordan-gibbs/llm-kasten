@@ -146,7 +146,7 @@ class Vault:
         """Run an incremental sync if auto_sync is enabled."""
         if not self.config.auto_sync:
             return
-        from kasten.core.sync import execute_sync, compute_sync_plan
+        from kasten.core.sync import compute_sync_plan, execute_sync
 
         plan = compute_sync_plan(self)
         if plan.to_add or plan.to_update or plan.to_delete:

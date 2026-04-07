@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC
+
 BUILTIN_TEMPLATES: dict[str, str] = {
     "note": """\
 ---
@@ -195,9 +197,9 @@ def list_templates(templates_dir=None) -> list[dict]:
 
 def render_template(template_str: str, title: str, note_id: str, tags: list[str]) -> str:
     """Render a template with Jinja2-like variable substitution."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     tags_str = ", ".join(tags) if tags else ""
 
     result = template_str

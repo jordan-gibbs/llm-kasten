@@ -97,7 +97,7 @@ def search_fts(
         LIMIT ? OFFSET ?
     """
 
-    params = [fts_query] + filter_params + [limit, offset]
+    params = [fts_query, *filter_params, limit, offset]
 
     try:
         rows = conn.execute(sql, params).fetchall()

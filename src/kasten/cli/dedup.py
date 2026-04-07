@@ -5,7 +5,7 @@ from __future__ import annotations
 import typer
 
 from kasten.cli._output import console, output
-from kasten.core.similarity import shingle, jaccard
+from kasten.core.similarity import jaccard, shingle
 from kasten.models.output import success
 
 

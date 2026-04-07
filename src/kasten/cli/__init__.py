@@ -13,7 +13,7 @@ def _version_callback(value: bool) -> None:
 
 app = typer.Typer(
     name="kasten",
-    help="LLM-powered personal knowledge base manager.",
+    help="Agentic knowledge base manager for markdown.",
     no_args_is_help=True,
     rich_markup_mode="rich",
 )
@@ -27,14 +27,17 @@ def main(
 
 
 # Root-level commands
-from kasten.cli.main import init as _init, status as _status, sync as _sync  # noqa: E402
-from kasten.cli.search import search as _search  # noqa: E402
-from kasten.cli.dedup import dedup as _dedup  # noqa: E402
-from kasten.cli.import_cmd import import_vault as _import  # noqa: E402
-from kasten.cli.watch import watch as _watch  # noqa: E402
-from kasten.cli.serve import serve as _serve  # noqa: E402
-from kasten.cli.repair import repair as _repair  # noqa: E402
-from kasten.cli.note import note_tags as _tags, note_show as _show  # noqa: E402
+from kasten.cli.dedup import dedup as _dedup
+from kasten.cli.import_cmd import import_vault as _import
+from kasten.cli.main import init as _init
+from kasten.cli.main import status as _status
+from kasten.cli.main import sync as _sync
+from kasten.cli.note import note_show as _show
+from kasten.cli.note import note_tags as _tags
+from kasten.cli.repair import repair as _repair
+from kasten.cli.search import search as _search
+from kasten.cli.serve import serve as _serve
+from kasten.cli.watch import watch as _watch
 
 app.command("init")(_init)
 app.command("status")(_status)
@@ -49,20 +52,18 @@ app.command("watch")(_watch)
 app.command("serve")(_serve)
 
 # Sub-apps
-from kasten.cli.note import app as note_app  # noqa: E402
-from kasten.cli.graph import app as graph_app  # noqa: E402
-from kasten.cli.ingest import app as ingest_app  # noqa: E402
-from kasten.cli.index import app as index_app  # noqa: E402
-from kasten.cli.lint import app as lint_app  # noqa: E402
-from kasten.cli.export import app as export_app  # noqa: E402
-from kasten.cli.compile import app as compile_app  # noqa: E402
-from kasten.cli.ask import app as ask_app  # noqa: E402
-from kasten.cli.config_cmd import app as config_app  # noqa: E402
-from kasten.cli.topic import app as topic_app  # noqa: E402
-from kasten.cli.batch import app as batch_app  # noqa: E402
-from kasten.cli.template import app as template_app  # noqa: E402
-from kasten.cli.git_cmd import app as git_app  # noqa: E402
-from kasten.cli.tag import app as tag_app  # noqa: E402
+from kasten.cli.batch import app as batch_app
+from kasten.cli.config_cmd import app as config_app
+from kasten.cli.export import app as export_app
+from kasten.cli.git_cmd import app as git_app
+from kasten.cli.graph import app as graph_app
+from kasten.cli.index import app as index_app
+from kasten.cli.ingest import app as ingest_app
+from kasten.cli.lint import app as lint_app
+from kasten.cli.note import app as note_app
+from kasten.cli.tag import app as tag_app
+from kasten.cli.template import app as template_app
+from kasten.cli.topic import app as topic_app
 
 app.add_typer(note_app, name="note", help="Note CRUD operations.")
 app.add_typer(graph_app, name="graph", help="Knowledge graph and link analysis.")
@@ -70,8 +71,6 @@ app.add_typer(ingest_app, name="ingest", help="Ingest files, URLs, or PDFs.")
 app.add_typer(index_app, name="index", help="Auto-generated index pages.")
 app.add_typer(lint_app, name="lint", help="Health-check the vault.")
 app.add_typer(export_app, name="export", help="Export notes.")
-app.add_typer(compile_app, name="compile", help="LLM-compile raw notes.")
-app.add_typer(ask_app, name="ask", help="Q&A against the knowledge base.")
 app.add_typer(config_app, name="config", help="Configuration.")
 app.add_typer(topic_app, name="topic", help="Topic hierarchy.")
 app.add_typer(batch_app, name="batch", help="Bulk operations.")

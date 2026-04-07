@@ -14,15 +14,11 @@ def watch(
     run_lint: bool = typer.Option(False, "--lint", "-l", help="Run lint after sync"),
 ) -> None:
     """Watch for file changes and auto-sync."""
-    try:
-        from watchdog.observers import Observer
-        from watchdog.events import FileSystemEventHandler, FileSystemEvent
-    except ImportError:
-        console.print("[red]Watch mode requires: pip install kasten[watch][/]")
-        raise typer.Exit(1)
+    from watchdog.events import FileSystemEvent, FileSystemEventHandler
+    from watchdog.observers import Observer
 
-    from kasten.core.vault import Vault
     from kasten.core.sync import compute_sync_plan, execute_sync
+    from kasten.core.vault import Vault
 
     vault = Vault.discover()
     console.print(f"[bold]Watching:[/] {vault.root}")

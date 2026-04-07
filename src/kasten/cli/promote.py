@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC
+
 import typer
 
 from kasten.cli._output import console, output
@@ -18,9 +20,10 @@ def promote(
     Criteria for draft -> review: has summary, has tags, has 50+ words.
     Criteria for review -> evergreen: has links (in or out), has 100+ words.
     """
-    from datetime import datetime, timezone
-    from kasten.core.vault import Vault, VaultError
+    from datetime import datetime
+
     from kasten.core.frontmatter import parse_frontmatter, serialize_frontmatter
+    from kasten.core.vault import Vault, VaultError
 
     try:
         vault = Vault.discover()
@@ -98,7 +101,7 @@ def promote(
             content = file_path.read_text(encoding="utf-8-sig")
             meta, body = parse_frontmatter(content)
             meta.status = p["to"]
-            meta.updated = datetime.now(timezone.utc)
+            meta.updated = datetime.now(UTC)
             file_path.write_text(serialize_frontmatter(meta) + "\n" + body, encoding="utf-8")
         except Exception as e:
             errors.append({"id": p["id"], "error": str(e)})

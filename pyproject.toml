@@ -1,0 +1,86 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kasten"
+version = "0.1.0"
+description = "CLI knowledge base manager for markdown wikis, designed for both humans and LLM agents"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [{name = "Jordan Gibbs", email = "jordan@jordangibbs.xyz"}]
+keywords = ["zettelkasten", "knowledge-base", "wiki", "llm", "markdown", "cli", "agent"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0",
+    "pyyaml>=6.0",
+    "pydantic>=2.0",
+    "jinja2>=3.1",
+    "platformdirs>=4.0",
+]
+
+[project.optional-dependencies]
+web = ["httpx>=0.24", "beautifulsoup4>=4.12", "html2text>=2024.2"]
+pdf = ["pymupdf>=1.23"]
+llm = ["openai>=1.0"]
+anthropic = ["anthropic>=0.25"]
+ollama = ["httpx>=0.24"]
+semantic = ["numpy>=1.24"]
+export = ["pygments>=2.17"]
+watch = ["watchdog>=4.0"]
+all = [
+    "kasten[web]",
+    "kasten[pdf]",
+    "kasten[llm]",
+    "kasten[anthropic]",
+    "kasten[ollama]",
+    "kasten[watch]",
+    "kasten[semantic]",
+    "kasten[export]",
+]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.3",
+    "mypy>=1.8",
+]
+
+[project.scripts]
+kasten = "kasten.cli:app"
+kas = "kasten.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/jordan-gibbs/kasten"
+Repository = "https://github.com/jordan-gibbs/kasten"
+Issues = "https://github.com/jordan-gibbs/kasten/issues"
+Changelog = "https://github.com/jordan-gibbs/kasten/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kasten"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q --strict-markers"

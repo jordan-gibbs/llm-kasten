@@ -128,7 +128,9 @@ class KastenHandler(BaseHTTPRequestHandler):
         nav = self._build_nav()
         full = f"""<!DOCTYPE html><html><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title}</title><style>{CSS}</style></head>
+<title>{title} | LLM-Kasten</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='20' width='80' height='65' rx='4' fill='%2316213e' stroke='%233a86ff' stroke-width='3'/><rect x='20' y='10' width='60' height='15' rx='3' fill='%233a86ff'/><line x1='25' y1='42' x2='75' y2='42' stroke='%2390caf9' stroke-width='2'/><line x1='25' y1='52' x2='65' y2='52' stroke='%2390caf9' stroke-width='2'/><line x1='25' y1='62' x2='70' y2='62' stroke='%2390caf9' stroke-width='2'/><circle cx='72' cy='72' r='8' fill='%233a86ff'/><line x1='72' y1='67' x2='72' y2='77' stroke='white' stroke-width='2'/><line x1='67' y1='72' x2='77' y2='72' stroke='white' stroke-width='2'/></svg>">
+<style>{CSS}</style></head>
 <body><div class="layout"><nav>{nav}</nav><div class="nav-handle"></div><main>{body_html}</main></div>{DRAG_JS}</body></html>"""
         self.send_response(code)
         self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -139,7 +141,8 @@ class KastenHandler(BaseHTTPRequestHandler):
         vault = self.__class__.vault
         name = vault.config.name
         lines = [
-            f'<div class="brand">{name}</div>',
+            f'<div class="brand">LLM-Kasten</div>'
+            f'<div style="font-size:0.75rem;color:#666;margin:-0.8rem 0 0.8rem 0">{name}</div>',
             f'<form action="/search"><div class="search-box">'
             f'<input type="text" name="q" placeholder="Search..."></div></form>',
             '<a href="/">Home</a>',

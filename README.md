@@ -7,17 +7,17 @@ kasten turns a directory of `.md` files into a searchable, interlinked knowledge
 ## Install
 
 ```bash
-pip install kasten
+pip install llm-kasten
 ```
 
 Optional extras:
 
 ```bash
-pip install kasten[web]         # Web page ingestion
-pip install kasten[pdf]         # PDF ingestion
-pip install kasten[llm]         # OpenAI-compatible LLM features
-pip install kasten[anthropic]   # Anthropic Claude
-pip install kasten[watch]       # File watcher mode
+pip install llm-kasten[web]         # Web page ingestion
+pip install llm-kasten[pdf]         # PDF ingestion
+pip install llm-kasten[llm]         # OpenAI-compatible LLM features
+pip install llm-kasten[anthropic]   # Anthropic Claude
+pip install llm-kasten[watch]       # File watcher mode
 ```
 
 ## Quick start

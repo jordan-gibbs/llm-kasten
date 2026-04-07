@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "kasten"
+name = "llm-kasten"
 version = "0.1.0"
 description = "CLI knowledge base manager for markdown wikis, designed for both humans and LLM agents"
 readme = "README.md"
@@ -40,14 +40,14 @@ semantic = ["numpy>=1.24"]
 export = ["pygments>=2.17"]
 watch = ["watchdog>=4.0"]
 all = [
-    "kasten[web]",
-    "kasten[pdf]",
-    "kasten[llm]",
-    "kasten[anthropic]",
-    "kasten[ollama]",
-    "kasten[watch]",
-    "kasten[semantic]",
-    "kasten[export]",
+    "llm-kasten[web]",
+    "llm-kasten[pdf]",
+    "llm-kasten[llm]",
+    "llm-kasten[anthropic]",
+    "llm-kasten[ollama]",
+    "llm-kasten[watch]",
+    "llm-kasten[semantic]",
+    "llm-kasten[export]",
 ]
 dev = [
     "pytest>=7.4",

@@ -1,4 +1,4 @@
-# Releasing kasten
+# Releasing llm-kasten
 
 ## First-time setup
 

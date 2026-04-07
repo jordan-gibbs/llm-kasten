@@ -1,6 +1,6 @@
 # LLM-Kasten: Agentic Knowledge Management
 
-![LLM-Kasten](assets/hero-graph.svg)
+https://github.com/user-attachments/assets/2a77c8d9-bf8d-447f-b9a9-cc367981721b
 
 [![PyPI](https://img.shields.io/pypi/v/llm-kasten)](https://pypi.org/project/llm-kasten/)
 [![CI](https://github.com/jordan-gibbs/llm-kasten/actions/workflows/ci.yml/badge.svg)](https://github.com/jordan-gibbs/llm-kasten/actions/workflows/ci.yml)

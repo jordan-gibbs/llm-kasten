@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from kasten.core.frontmatter import parse_frontmatter, render_note
@@ -75,7 +75,7 @@ def write_note(
         parent=parent,
         source=source,
         summary=summary,
-        created=datetime.now(timezone.utc),
+        created=datetime.now(UTC),
     )
 
     # Determine output path, avoid collisions

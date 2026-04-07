@@ -23,11 +23,11 @@ def config_show(
     data = {
         "vault_name": config.name,
         "vault_path": str(vault.root),
-        "llm_provider": config.llm_provider,
-        "llm_model": config.llm_model,
+        "knowledge_dir": config.knowledge_dir,
         "auto_sync": config.auto_sync,
         "auto_build_index": config.auto_build_index,
-        "exclude_patterns": config.exclude_patterns,
+        "search_boost_evergreen": config.search_boost_evergreen,
+        "search_penalize_deprecated": config.search_penalize_deprecated,
     }
 
     if json_output:
@@ -53,8 +53,9 @@ def config_set(
     # Map dot-notation keys to config attributes
     key_map = {
         "vault.name": "name",
-        "llm.provider": "llm_provider",
-        "llm.model": "llm_model",
+        "vault.knowledge_dir": "knowledge_dir",
+        "search.boost_evergreen": "search_boost_evergreen",
+        "search.penalize_deprecated": "search_penalize_deprecated",
         "sync.auto_sync": "auto_sync",
         "index.auto_build": "auto_build_index",
     }
@@ -91,8 +92,9 @@ def config_get(
 
     key_map = {
         "vault.name": "name",
-        "llm.provider": "llm_provider",
-        "llm.model": "llm_model",
+        "vault.knowledge_dir": "knowledge_dir",
+        "search.boost_evergreen": "search_boost_evergreen",
+        "search.penalize_deprecated": "search_penalize_deprecated",
         "sync.auto_sync": "auto_sync",
         "index.auto_build": "auto_build_index",
     }
@@ -116,8 +118,8 @@ def config_agent_docs(
     json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Update agent config files (CLAUDE.md, AGENTS.md, GEMINI.md, copilot-instructions.md)."""
-    from kasten.core.vault import Vault
     from kasten.core.agent_docs import inject_agent_docs
+    from kasten.core.vault import Vault
 
     vault = Vault.discover()
     modified = inject_agent_docs(vault.root, agents=agents)

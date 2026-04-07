@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from kasten.models.note import slugify
@@ -61,7 +61,7 @@ def ingest_pdf_file(
     md_content = "\n\n".join(text_parts)
 
     file_id = slugify(pdf_title)
-    now_iso = datetime.now(timezone.utc).isoformat()
+    now_iso = datetime.now(UTC).isoformat()
     tags_yaml = ", ".join(tags) if tags else ""
 
     notes_dir = vault.notes_dir

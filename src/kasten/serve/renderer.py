@@ -5,8 +5,6 @@ from __future__ import annotations
 import html
 import re
 
-from kasten.core.patterns import WIKI_LINK_RE
-
 # Simple markdown patterns
 MD_PATTERNS = [
     # Headers
@@ -92,7 +90,7 @@ def render_markdown(body: str) -> str:
 
     # Restore code blocks
     for i, block in enumerate(code_blocks):
-        escaped = html.escape(block)
+        html.escape(block)
         lang_match = re.match(r"```(\w+)\n", block)
         lang = lang_match.group(1) if lang_match else ""
         code_content = re.sub(r"```\w*\n|```", "", block)

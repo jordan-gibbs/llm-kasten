@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from kasten.core.frontmatter import render_note
@@ -24,7 +24,7 @@ def _make_meta(
         status="draft",
         source=source,
         tags=tags or [],
-        created=datetime.now(timezone.utc),
+        created=datetime.now(UTC),
     )
 
 
@@ -84,7 +84,7 @@ def ingest_local_file(
         dest.write_text(render_note(meta, body), encoding="utf-8")
 
     # Log ingestion
-    now_iso = datetime.now(timezone.utc).isoformat()
+    now_iso = datetime.now(UTC).isoformat()
     vault.db.execute(
         "INSERT INTO ingest_log (source_url, source_type, raw_path, ingested_at, status) "
         "VALUES (?, 'file', ?, ?, 'raw')",

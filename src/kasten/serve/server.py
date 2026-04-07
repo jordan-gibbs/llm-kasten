@@ -5,7 +5,7 @@ from __future__ import annotations
 import html as html_mod
 import json
 import urllib.parse
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from kasten.serve.renderer import render_markdown
 

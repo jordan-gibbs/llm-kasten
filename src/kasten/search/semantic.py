@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import math
-import struct
 import sqlite3
+import struct
 
 
 def cosine_similarity(a: bytes, b: bytes, dims: int) -> float:
     """Compute cosine similarity between two packed float32 vectors."""
     va = struct.unpack(f"{dims}f", a)
     vb = struct.unpack(f"{dims}f", b)
-    dot = sum(x * y for x, y in zip(va, vb))
+    dot = sum(x * y for x, y in zip(va, vb, strict=False))
     na = math.sqrt(sum(x * x for x in va))
     nb = math.sqrt(sum(x * x for x in vb))
     if na == 0 or nb == 0:

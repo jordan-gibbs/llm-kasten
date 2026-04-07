@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import typer
@@ -90,7 +90,7 @@ def _update_file_frontmatter(vault_root: Path, rel_path: str, updates: dict) -> 
         elif hasattr(meta, key):
             setattr(meta, key, value)
 
-    meta.updated = datetime.now(timezone.utc)
+    meta.updated = datetime.now(UTC)
     new_content = serialize_frontmatter(meta) + "\n" + body
     file_path.write_text(new_content, encoding="utf-8")
 

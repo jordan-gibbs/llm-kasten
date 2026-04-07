@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from datetime import UTC
 
 import typer
 
@@ -36,6 +36,7 @@ def note_new(
     """
     import sys
     from pathlib import Path as P
+
     from kasten.core.note import write_note
     from kasten.core.vault import Vault
     from kasten.models.note import slugify
@@ -269,7 +270,7 @@ def note_list(
         f"""SELECT n.*,
             (SELECT GROUP_CONCAT(t.tag, ',') FROM tags t WHERE t.note_id = n.id) as tag_list
         FROM notes n WHERE {where} ORDER BY {order} LIMIT ?""",
-        params + [effective_limit],
+        [*params, effective_limit],
     ).fetchall()
 
     notes = []
@@ -335,10 +336,11 @@ def note_update(
     json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Update frontmatter fields on a single note."""
-    from datetime import datetime, timezone
+    from datetime import datetime
+
     from kasten.core.frontmatter import parse_frontmatter, serialize_frontmatter
-    from kasten.core.vault import Vault
     from kasten.core.sync import compute_sync_plan, execute_sync
+    from kasten.core.vault import Vault
 
     vault = Vault.discover()
     vault.auto_sync()
@@ -394,7 +396,7 @@ def note_update(
             console.print("[dim]Nothing to update.[/]")
         return
 
-    meta.updated = datetime.now(timezone.utc)
+    meta.updated = datetime.now(UTC)
     new_content = serialize_frontmatter(meta) + "\n" + body
     file_path.write_text(new_content, encoding="utf-8")
 
@@ -414,8 +416,8 @@ def note_mv(
     json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Move/rename a note, updating all references."""
-    from kasten.core.vault import Vault
     from kasten.core.sync import compute_sync_plan, execute_sync
+    from kasten.core.vault import Vault
 
     vault = Vault.discover()
     vault.auto_sync()

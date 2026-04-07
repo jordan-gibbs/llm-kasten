@@ -17,8 +17,6 @@ Optional extras:
 ```bash
 pip install llm-kasten[web]         # Web page ingestion
 pip install llm-kasten[pdf]         # PDF ingestion
-pip install llm-kasten[llm]         # OpenAI-compatible LLM features
-pip install llm-kasten[anthropic]   # Anthropic Claude
 pip install llm-kasten[watch]       # File watcher mode
 ```
 
@@ -134,8 +132,6 @@ kasten sync                           # Rebuild index from files
 ```bash
 kasten ingest file ./doc.md --tag ref --json   # Ingest local files
 kasten ingest web "https://..." --json         # Ingest web pages
-kasten compile --all --json                    # LLM-compile raw notes
-kasten ask "question" --json                   # Q&A against the KB
 kasten export json --json                      # Full JSON dump
 kasten export vault ./out --tag ml --json      # Export filtered subset
 kasten import ./other-kb --prefix imported --json
@@ -200,10 +196,6 @@ knowledge_dir = "knowledge"
 [search]
 boost_evergreen = 1.5
 penalize_deprecated = 0.3
-
-[llm]
-provider = "anthropic"
-model = "claude-sonnet-4-20250514"
 ```
 
 See `kasten config show` for all settings.

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 
 
 class IndexGenerator:
@@ -33,7 +32,7 @@ class IndexGenerator:
         return [b for b in built if b]
 
     def _write_index(self, filename: str, title: str, body: str) -> str:
-        now_iso = datetime.now(timezone.utc).isoformat()
+        now_iso = datetime.now(UTC).isoformat()
         content = (
             f"---\n"
             f"title: \"{title}\"\n"
@@ -55,7 +54,7 @@ class IndexGenerator:
             "FROM notes WHERE type NOT IN ('index') ORDER BY parent, title"
         ).fetchall()
 
-        lines = [f"# Master Index\n", f"**{len(rows)}** notes in vault.\n"]
+        lines = ["# Master Index\n", f"**{len(rows)}** notes in vault.\n"]
 
         # Group by parent
         groups: dict[str, list] = {}
@@ -165,8 +164,8 @@ class IndexGenerator:
 
         lines = [
             "# Vault Statistics\n",
-            f"| Metric | Value |",
-            f"|--------|-------|",
+            "| Metric | Value |",
+            "|--------|-------|",
             f"| Total notes | {total} |",
             f"| Total words | {total_words:,} |",
             f"| Unique tags | {total_tags} |",
@@ -224,8 +223,8 @@ class IndexGenerator:
 
     def _build_stale(self) -> str:
         """Evergreen notes not updated in 6+ months — candidates for review."""
-        from datetime import datetime, timezone, timedelta
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=180)).isoformat()
+        from datetime import datetime, timedelta
+        cutoff = (datetime.now(UTC) - timedelta(days=180)).isoformat()
         rows = self.vault.db.execute(
             "SELECT id, title, status, updated, created, word_count FROM notes "
             "WHERE status = 'evergreen' AND type NOT IN ('index') "

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC
+
 import typer
 
 from kasten.cli._output import console, output
@@ -152,8 +154,8 @@ def lint(
             })
 
     if "expired-notes" in rules_to_run:
-        from datetime import datetime, timezone
-        now_iso = datetime.now(timezone.utc).isoformat()
+        from datetime import datetime
+        now_iso = datetime.now(UTC).isoformat()
         for row in conn.execute(
             "SELECT id, path, expires FROM notes WHERE expires IS NOT NULL AND expires < ?",
             (now_iso,),
@@ -180,8 +182,8 @@ def lint(
             })
 
     if "stale-reviews" in rules_to_run:
-        from datetime import datetime, timezone, timedelta
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
+        from datetime import datetime, timedelta
+        cutoff = (datetime.now(UTC) - timedelta(days=90)).isoformat()
         for row in conn.execute(
             "SELECT id, path, reviewed FROM notes "
             "WHERE reviewed IS NOT NULL AND reviewed < ? AND status = 'evergreen'",

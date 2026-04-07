@@ -14,6 +14,7 @@ app = typer.Typer()
 
 @app.command("list")
 def tag_list(
+    min_count: int = typer.Option(1, "--min", "-m", help="Only show tags with N+ notes"),
     json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """List all tags with note counts."""
@@ -22,7 +23,8 @@ def tag_list(
     vault = Vault.discover()
     vault.auto_sync()
     rows = vault.db.execute(
-        "SELECT tag, COUNT(*) as count FROM tags GROUP BY tag ORDER BY count DESC"
+        "SELECT tag, COUNT(*) as count FROM tags GROUP BY tag HAVING count >= ? ORDER BY count DESC",
+        (min_count,),
     ).fetchall()
     tags = [{"tag": r["tag"], "count": r["count"]} for r in rows]
 
@@ -94,6 +96,13 @@ def tag_suggest(
                     "canonical_count": pcount,
                 })
                 break  # Best match
+
+        # Also catch simple plurals
+    tag_set = {t[0] for t in tags}
+    for stag, _sc in singletons:
+        if stag.endswith("s") and stag[:-1] in tag_set and stag not in [s["singleton"] for s in suggestions]:
+            suggestions.append({"singleton": stag, "suggested_canonical": stag[:-1],
+                "similarity": 0.95, "canonical_count": next((c for t, c in tags if t == stag[:-1]), 0)})
 
     suggestions.sort(key=lambda s: s["similarity"], reverse=True)
 

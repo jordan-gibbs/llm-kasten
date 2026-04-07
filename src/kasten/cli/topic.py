@@ -40,31 +40,11 @@ def topic_tree(
                 topics[ancestor] = 0
 
     if json_output:
-        if topics:
-            data = [{"topic": k, "direct_notes": v} for k, v in sorted(topics.items())]
-        else:
-            # Fall back to computed clusters
-            from kasten.core.clusters import compute_clusters
-            clusters = compute_clusters(vault.db)
-            data = [{"topic": c["label"], "direct_notes": c["count"], "computed": True} for c in clusters]
+        data = [{"topic": k, "direct_notes": v} for k, v in sorted(topics.items())]
         output(success(data, count=len(data), vault=str(vault.root)), json_mode=True)
     else:
         if not topics:
-            # Fall back to computed clusters
-            from kasten.core.clusters import compute_clusters
-            clusters = compute_clusters(vault.db)
-            if clusters:
-                from rich.tree import Tree
-                root = Tree("[bold]Topic Clusters[/] [dim](auto-computed from tags)[/]")
-                for c in clusters[:20]:
-                    label = f"[cyan]{c['label']}[/] ({c['count']} notes)"
-                    node = root.add(label)
-                    for tag in c["tags"][:5]:
-                        if tag != c["label"]:
-                            node.add(f"[dim]{tag}[/]")
-                console.print(root)
-            else:
-                console.print("[dim]No topics found. Set 'parent' in note frontmatter.[/]")
+            console.print("[dim]No topics found. Set 'parent' in note frontmatter.[/]")
             return
 
         from rich.tree import Tree

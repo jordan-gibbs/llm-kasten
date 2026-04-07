@@ -99,17 +99,6 @@ CREATE TABLE IF NOT EXISTS tag_aliases (
     canonical TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS ingest_log (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    source_url  TEXT,
-    source_type TEXT NOT NULL,
-    raw_path    TEXT NOT NULL,
-    note_id     TEXT,
-    ingested_at TEXT NOT NULL,
-    compiled_at TEXT,
-    status      TEXT NOT NULL DEFAULT 'raw'
-                    CHECK (status IN ('raw','compiled','failed'))
-);
 """
 
 FTS_SQL = """

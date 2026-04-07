@@ -12,12 +12,12 @@ kasten turns a directory of `.md` files into a searchable, interlinked knowledge
 pip install llm-kasten
 ```
 
-Optional extras:
+Optional extra:
 
 ```bash
-pip install llm-kasten[web]         # Web page ingestion
-pip install llm-kasten[pdf]         # PDF ingestion
-pip install llm-kasten[watch]       # File watcher mode
+pip install llm-kasten[mcp]         # MCP server for Claude Desktop, Cursor, etc.
+
+```bash
 ```
 
 ## Quick start
@@ -130,8 +130,6 @@ kasten sync                           # Rebuild index from files
 ### Advanced
 
 ```bash
-kasten ingest file ./doc.md --tag ref --json   # Ingest local files
-kasten ingest web "https://..." --json         # Ingest web pages
 kasten export json --json                      # Full JSON dump
 kasten export vault ./out --tag ml --json      # Export filtered subset
 kasten import ./other-kb --prefix imported --json

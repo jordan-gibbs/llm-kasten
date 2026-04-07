@@ -111,6 +111,11 @@ def note_new(
         if similar:
             data["warning"] = f"Similar note already exists: {similar[0]['id']}"
             data["similar"] = [{"id": r["id"], "title": r["title"]} for r in similar]
+        top_tags = vault.db.execute(
+            "SELECT tag, COUNT(*) as c FROM tags GROUP BY tag ORDER BY c DESC LIMIT 30"
+        ).fetchall()
+        if top_tags:
+            data["existing_tags"] = [r["tag"] for r in top_tags]
         output(success(data, vault=str(vault.root)), json_mode=True)
     else:
         console.print(f"[green]Created:[/] {rel}")
@@ -483,30 +488,3 @@ def note_rm(
         console.print(f"[red]Deleted:[/] {note_id}")
 
 
-@app.command("tags")
-def note_tags(
-    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
-) -> None:
-    """List all tags with note counts."""
-    from kasten.core.vault import Vault
-
-    vault = Vault.discover()
-    vault.auto_sync()
-
-    rows = vault.db.execute(
-        "SELECT tag, COUNT(*) as count FROM tags GROUP BY tag ORDER BY count DESC"
-    ).fetchall()
-
-    tags = [{"tag": r["tag"], "count": r["count"]} for r in rows]
-
-    if json_output:
-        output(success(tags, count=len(tags), vault=str(vault.root)), json_mode=True)
-    else:
-        from rich.table import Table
-
-        table = Table(title="Tags", show_header=True, header_style="bold")
-        table.add_column("Tag", style="green")
-        table.add_column("Notes", justify="right")
-        for t in tags:
-            table.add_row(t["tag"], str(t["count"]))
-        console.print(table)

@@ -13,7 +13,7 @@ app = typer.Typer()
 @app.command("tree")
 def topic_tree(
     depth: int = typer.Option(0, "--depth", "-d", help="Max depth (0=unlimited)"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show the full topic hierarchy as a tree."""
     from kasten.core.vault import Vault
@@ -40,11 +40,31 @@ def topic_tree(
                 topics[ancestor] = 0
 
     if json_output:
-        data = [{"topic": k, "direct_notes": v} for k, v in sorted(topics.items())]
+        if topics:
+            data = [{"topic": k, "direct_notes": v} for k, v in sorted(topics.items())]
+        else:
+            # Fall back to computed clusters
+            from kasten.core.clusters import compute_clusters
+            clusters = compute_clusters(vault.db)
+            data = [{"topic": c["label"], "direct_notes": c["count"], "computed": True} for c in clusters]
         output(success(data, count=len(data), vault=str(vault.root)), json_mode=True)
     else:
         if not topics:
-            console.print("[dim]No topics found. Set 'parent' in note frontmatter.[/]")
+            # Fall back to computed clusters
+            from kasten.core.clusters import compute_clusters
+            clusters = compute_clusters(vault.db)
+            if clusters:
+                from rich.tree import Tree
+                root = Tree("[bold]Topic Clusters[/] [dim](auto-computed from tags)[/]")
+                for c in clusters[:20]:
+                    label = f"[cyan]{c['label']}[/] ({c['count']} notes)"
+                    node = root.add(label)
+                    for tag in c["tags"][:5]:
+                        if tag != c["label"]:
+                            node.add(f"[dim]{tag}[/]")
+                console.print(root)
+            else:
+                console.print("[dim]No topics found. Set 'parent' in note frontmatter.[/]")
             return
 
         from rich.tree import Tree
@@ -87,7 +107,7 @@ def _build_rich_tree(parent_node, topics: dict, max_depth: int, prefix: str = ""
 
 @app.command("list")
 def topic_list(
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Flat list of all topics with note counts."""
     from kasten.core.vault import Vault
@@ -119,7 +139,7 @@ def topic_list(
 @app.command("show")
 def topic_show(
     topic: str = typer.Argument(..., help="Topic path (e.g. ml/deep-learning)"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show all notes under a topic (including subtopics)."""
     from kasten.core.vault import Vault

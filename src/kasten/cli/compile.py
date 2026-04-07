@@ -18,7 +18,7 @@ def compile_cmd(
     strategy: str = typer.Option("summarize", "--strategy", "-s", help="Strategy: summarize|extract|restructure"),
     model: str | None = typer.Option(None, "--model", "-m", help="Override LLM model"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be compiled"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """LLM-compile raw material into structured notes."""
     if ctx.invoked_subcommand is not None:

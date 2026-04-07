@@ -13,7 +13,7 @@ app = typer.Typer()
 @app.command("backlinks")
 def graph_backlinks(
     note_id: str = typer.Argument(..., help="Note ID"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show what links TO this note."""
     from kasten.core.vault import Vault
@@ -64,7 +64,7 @@ def graph_backlinks(
 @app.command("outlinks")
 def graph_outlinks(
     note_id: str = typer.Argument(..., help="Note ID"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show what this note links TO."""
     from kasten.core.vault import Vault
@@ -113,7 +113,7 @@ def graph_outlinks(
 
 @app.command("orphans")
 def graph_orphans(
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Find notes with no inbound or outbound links."""
     from kasten.core.vault import Vault
@@ -145,7 +145,7 @@ def graph_orphans(
 
 @app.command("broken")
 def graph_broken(
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Find broken [[links]] that don't resolve."""
     from kasten.core.vault import Vault
@@ -188,7 +188,7 @@ def graph_broken(
 @app.command("stub")
 def graph_stub(
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview what would be created"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Create stub notes for all broken [[links]]."""
     from kasten.core.vault import Vault
@@ -249,7 +249,7 @@ def graph_stub(
 @app.command("hubs")
 def graph_hubs(
     limit: int = typer.Option(20, "--limit", "-l", help="Max results"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show most-linked-to notes."""
     from kasten.core.vault import Vault

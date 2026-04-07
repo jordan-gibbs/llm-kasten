@@ -12,7 +12,7 @@ app = typer.Typer()
 
 @app.command("list")
 def template_list(
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """List available note templates."""
     from kasten.core.templates import list_templates

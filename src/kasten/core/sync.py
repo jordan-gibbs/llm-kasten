@@ -185,10 +185,17 @@ def _upsert_note_to_db(conn, note, synced_at: str, file_mtime: float = 0) -> Non
         ),
     )
 
-    # Update tags (delete + reinsert is fine for small sets)
+    # Update tags — resolve aliases before writing
     conn.execute("DELETE FROM tags WHERE note_id = ?", (meta.id,))
+    alias_map = {}
+    try:
+        for row in conn.execute("SELECT alias, canonical FROM tag_aliases"):
+            alias_map[row["alias"]] = row["canonical"]
+    except Exception:
+        pass
     for tag in meta.tags:
-        conn.execute("INSERT INTO tags (note_id, tag) VALUES (?, ?)", (meta.id, tag))
+        resolved = alias_map.get(tag, tag)
+        conn.execute("INSERT OR IGNORE INTO tags (note_id, tag) VALUES (?, ?)", (meta.id, resolved))
 
     # Update aliases
     conn.execute("DELETE FROM aliases WHERE note_id = ?", (meta.id,))

@@ -49,12 +49,20 @@ kasten repair --json                  # Full rebuild + fix broken links + promot
 kasten status --json                  # Vault overview
 ```
 
+### Note quality requirements
+
+Every note MUST have:
+- At least one tag (`--tag`). Check existing tags with `kasten tags -j`.
+- A summary (`--summary`). One sentence, under 120 characters.
+- A body with meaningful content (50+ words).
+- Use `--body-file` instead of `--body` to avoid shell escaping issues.
+
+Run `kasten lint -j` to check quality, `kasten repair -j` to auto-fix.
+
 ### Key conventions
 
 - Notes live in `knowledge/notes/` as markdown with YAML frontmatter
 - Link between notes with `[[note-id]]` syntax
-- The `summary` frontmatter field gives a one-line description without reading the body
-- Use `--body-file` instead of `--body` to avoid shell escaping issues with long content
 - After editing .md files directly, run `kasten sync` to update the index
 - Statuses: draft -> review -> evergreen -> stale -> deprecated -> archive
 - Run `kasten --help` for the full command list

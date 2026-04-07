@@ -27,7 +27,7 @@ def note_new(
     confidence: float | None = typer.Option(None, "--confidence", help="Confidence 0.0-1.0"),
     template: str | None = typer.Option(None, "--template", "-T", help="Template: note|concept|reference|guide|comparison|moc"),
     edit: bool = typer.Option(False, "--edit", "-e", help="Open in $EDITOR"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Create a new note.
 
@@ -127,7 +127,7 @@ def note_show(
     note_ids: list[str] = typer.Argument(..., help="Note ID(s) — pass multiple to read several at once"),
     raw: bool = typer.Option(False, "--raw", "-r", help="Show raw markdown"),
     meta: bool = typer.Option(False, "--meta", "-m", help="Show only frontmatter"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Display one or more notes. Pass multiple IDs for batch read."""
     from kasten.core.vault import Vault
@@ -228,8 +228,9 @@ def note_list(
     tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by tag"),
     parent: str | None = typer.Option(None, "--parent", "-p", help="Filter by parent"),
     sort: str = typer.Option("updated", "--sort", help="Sort: created|updated|title|words"),
-    limit: int = typer.Option(50, "--limit", "-l", help="Max results"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    limit: int = typer.Option(20, "--limit", "-l", help="Max results"),
+    all_notes: bool = typer.Option(False, "--all", "-a", help="Return all notes (no limit)"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """List notes with optional filters."""
     from kasten.core.vault import Vault
@@ -263,11 +264,12 @@ def note_list(
     }
     order = sort_map.get(sort, "COALESCE(n.updated, n.created) DESC")
 
+    effective_limit = 999999 if all_notes else limit
     rows = vault.db.execute(
         f"""SELECT n.*,
             (SELECT GROUP_CONCAT(t.tag, ',') FROM tags t WHERE t.note_id = n.id) as tag_list
         FROM notes n WHERE {where} ORDER BY {order} LIMIT ?""",
-        params + [limit],
+        params + [effective_limit],
     ).fetchall()
 
     notes = []
@@ -330,7 +332,7 @@ def note_update(
     set_confidence: float | None = typer.Option(None, "--confidence", help="Set confidence 0.0-1.0"),
     set_superseded_by: str | None = typer.Option(None, "--superseded-by", help="Mark as superseded"),
     deprecate: bool = typer.Option(False, "--deprecate", help="Mark as deprecated"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Update frontmatter fields on a single note."""
     from datetime import datetime, timezone
@@ -409,7 +411,7 @@ def note_update(
 def note_mv(
     note_id: str = typer.Argument(..., help="Note ID to move"),
     new_path: str = typer.Argument(..., help="New relative path (e.g. notes/python/renamed.md)"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Move/rename a note, updating all references."""
     from kasten.core.vault import Vault
@@ -446,7 +448,7 @@ def note_mv(
 def note_rm(
     note_id: str = typer.Argument(..., help="Note ID to delete"),
     force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Delete a note."""
     from kasten.core.vault import Vault
@@ -481,7 +483,7 @@ def note_rm(
 
 @app.command("tags")
 def note_tags(
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """List all tags with note counts."""
     from kasten.core.vault import Vault

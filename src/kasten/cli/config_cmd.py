@@ -12,7 +12,7 @@ app = typer.Typer()
 
 @app.command("show")
 def config_show(
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Display current vault configuration."""
     from kasten.core.vault import Vault
@@ -42,7 +42,7 @@ def config_show(
 def config_set(
     key: str = typer.Argument(..., help="Config key (dot notation: vault.name)"),
     value: str = typer.Argument(..., help="Config value"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Set a configuration value."""
     from kasten.core.vault import Vault
@@ -81,7 +81,7 @@ def config_set(
 @app.command("get")
 def config_get(
     key: str = typer.Argument(..., help="Config key"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Get a configuration value."""
     from kasten.core.vault import Vault
@@ -113,7 +113,7 @@ def config_get(
 @app.command("agent-docs")
 def config_agent_docs(
     agents: list[str] = typer.Option(["claude"], "--agents", "-a", help="Which files: claude|agents|gemini|copilot"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Update agent config files (CLAUDE.md, AGENTS.md, GEMINI.md, copilot-instructions.md)."""
     from kasten.core.vault import Vault

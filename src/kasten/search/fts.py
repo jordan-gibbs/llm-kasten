@@ -8,10 +8,23 @@ import sqlite3
 from kasten.search.filters import SearchFilters
 
 
+def _split_alphanum(word: str) -> list[str]:
+    """Split words where letters meet digits: 'mamba3' -> ['mamba', '3'],
+    'gpt4o' -> ['gpt', '4', 'o'], 'llama3.1' -> ['llama', '3', '1'].
+    """
+    # Insert space at letter/digit boundaries
+    split = re.sub(r'([a-zA-Z])(\d)', r'\1 \2', word)
+    split = re.sub(r'(\d)([a-zA-Z])', r'\1 \2', split)
+    # Also split on dots/hyphens between digits (3.1 -> 3 1)
+    split = re.sub(r'(\d)[.\-](\d)', r'\1 \2', split)
+    return split.split()
+
+
 def preprocess_query(raw: str) -> str:
     """Transform user query into FTS5 query syntax.
 
     - Simple words get prefix matching: 'python async' -> 'python* async*'
+    - Glued alphanumeric split: 'mamba3' -> 'mamba 3', 'gpt4o' -> 'gpt 4 o'
     - Quoted phrases stay exact: '"async await"' stays as-is
     - Handles special FTS5 operators: AND, OR, NOT, NEAR
     """
@@ -27,10 +40,14 @@ def preprocess_query(raw: str) -> str:
             words = part.strip().split()
             for word in words:
                 if word:
-                    # Escape FTS5 special chars in individual words
                     clean = re.sub(r'[*^():{}]', '', word)
-                    if clean:
-                        processed.append(f'"{clean}"*')
+                    if not clean:
+                        continue
+                    # Split glued alphanumeric (mamba3 -> mamba + 3)
+                    subwords = _split_alphanum(clean)
+                    for sw in subwords:
+                        if sw:
+                            processed.append(f'"{sw}"*')
     return " ".join(processed)
 
 
@@ -57,13 +74,19 @@ def search_fts(
     # Exclude auto-generated index pages by default
     index_clause = "" if include_index else "AND n.type != 'index'"
 
-    # Single query with GROUP_CONCAT to avoid N+1 tag lookups
+    # BM25 column weights from config (id=unindexed=0, title, body, tags, aliases)
+    w = ranking or {}
+    tw = w.get("title_weight", 10.0)
+    bw = w.get("body_weight", 1.0)
+    tgw = w.get("tags_weight", 5.0)
+    aw = w.get("aliases_weight", 3.0)
+
     sql = f"""
         SELECT
             n.id, n.title, n.path, n.status, n.type,
             n.created, n.updated, n.word_count, n.summary,
             snippet(notes_fts, 2, '>>>', '<<<', '...', 64) as snippet,
-            bm25(notes_fts, 0.0, 10.0, 1.0, 5.0, 3.0) as score,
+            bm25(notes_fts, 0.0, {tw}, {bw}, {tgw}, {aw}) as score,
             (SELECT GROUP_CONCAT(t.tag, ',') FROM tags t WHERE t.note_id = n.id) as tag_list
         FROM notes_fts fts
         JOIN notes n ON fts.id = n.id

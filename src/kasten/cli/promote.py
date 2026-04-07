@@ -11,7 +11,7 @@ from kasten.models.output import success
 def promote(
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview what would be promoted"),
     min_words: int = typer.Option(50, "--min-words", help="Minimum words for promotion"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Auto-promote draft notes that meet quality criteria to 'review' or 'evergreen'.
 

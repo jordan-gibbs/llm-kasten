@@ -15,7 +15,7 @@ def import_vault(
     source: str = typer.Argument(..., help="Source directory to import from"),
     prefix: str = typer.Option("", "--prefix", "-p", help="Path prefix for imported notes (e.g. imported/ml)"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview what would be imported"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Import markdown notes from another directory into this vault."""
     from kasten.core.vault import Vault, VaultError

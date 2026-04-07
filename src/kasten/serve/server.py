@@ -8,6 +8,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from kasten.serve.renderer import render_markdown
 
 CSS = """
+:root { --nav-width: 300px; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
        line-height: 1.6; color: #1a1a2e; background: #fafafa; }
@@ -17,14 +18,19 @@ a:hover { text-decoration: underline; }
 .wiki-link.broken { color: #e63946; text-decoration: line-through; }
 
 .layout { display: flex; min-height: 100vh; }
-nav { width: 240px; background: #16213e; color: #e0e0e0; padding: 1rem;
-      position: fixed; height: 100vh; overflow-y: auto; }
-nav a { color: #90caf9; display: block; padding: 2px 0; }
-nav h3 { color: white; margin: 1rem 0 0.5rem 0; font-size: 0.85rem;
+nav { width: var(--nav-width); min-width: 200px; max-width: 500px;
+      background: #16213e; color: #e0e0e0; padding: 1rem;
+      position: fixed; height: 100vh; overflow-y: auto; resize: horizontal; overflow-x: hidden; }
+nav a { color: #90caf9; display: block; padding: 2px 0; font-size: 0.85rem;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+nav h3 { color: white; margin: 1rem 0 0.5rem 0; font-size: 0.8rem;
          text-transform: uppercase; letter-spacing: 0.05em; }
-nav .brand { font-size: 1.2rem; font-weight: bold; color: white; margin-bottom: 1rem; }
+nav .brand { font-size: 1.1rem; font-weight: bold; color: white; margin-bottom: 1rem; }
+.nav-handle { width: 4px; position: fixed; left: var(--nav-width); top: 0; height: 100vh;
+              cursor: col-resize; background: transparent; z-index: 10; }
+.nav-handle:hover { background: #3a86ff; }
 
-main { margin-left: 240px; padding: 2rem 3rem; max-width: 900px; flex: 1; }
+main { margin-left: var(--nav-width); padding: 2rem 3rem; max-width: 900px; flex: 1; }
 main h1 { margin-bottom: 0.5rem; }
 main h2 { margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid #e0e0e0; padding-bottom: 0.3rem; }
 main h3 { margin-top: 1rem; }
@@ -61,6 +67,25 @@ li { margin: 0.2rem 0; }
 .results .result { margin-bottom: 1rem; }
 .results .result .title { font-weight: 600; }
 .results .result .snippet { color: #666; font-size: 0.85rem; }
+"""
+
+DRAG_JS = """
+<script>
+(function() {
+  const handle = document.querySelector('.nav-handle');
+  const nav = document.querySelector('nav');
+  const main = document.querySelector('main');
+  let dragging = false;
+  handle.addEventListener('mousedown', function(e) { dragging = true; e.preventDefault(); });
+  document.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    const w = Math.min(Math.max(e.clientX, 200), 500);
+    document.documentElement.style.setProperty('--nav-width', w + 'px');
+    nav.style.width = w + 'px';
+  });
+  document.addEventListener('mouseup', function() { dragging = false; });
+})();
+</script>
 """
 
 
@@ -104,7 +129,7 @@ class KastenHandler(BaseHTTPRequestHandler):
         full = f"""<!DOCTYPE html><html><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title><style>{CSS}</style></head>
-<body><div class="layout"><nav>{nav}</nav><main>{body_html}</main></div></body></html>"""
+<body><div class="layout"><nav>{nav}</nav><div class="nav-handle"></div><main>{body_html}</main></div>{DRAG_JS}</body></html>"""
         self.send_response(code)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()

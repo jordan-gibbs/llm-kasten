@@ -19,10 +19,15 @@ def search(
     path_glob: str | None = typer.Option(None, "--path", help="Glob filter on path"),
     min_words: int | None = typer.Option(None, "--min-words", help="Minimum word count"),
     max_words: int | None = typer.Option(None, "--max-words", help="Maximum word count"),
-    include_body: bool = typer.Option(False, "--include-body", help="Include full note body in results"),
+    linked_from: str | None = typer.Option(None, "--linked-from", help="Only notes linked FROM this note ID"),
+    linked_to: str | None = typer.Option(None, "--linked-to", help="Only notes that link TO this note ID"),
+    min_inbound: int | None = typer.Option(None, "--min-inbound", help="Minimum inbound link count"),
+    has_backlinks: bool = typer.Option(False, "--has-backlinks", help="Only notes with backlinks"),
+    include_body: bool = typer.Option(False, "--include-body", help="Include full note body (auto-enabled with --json)"),
+    no_body: bool = typer.Option(False, "--no-body", help="Disable auto body inclusion in JSON mode"),
     limit: int = typer.Option(20, "--limit", "-l", help="Max results"),
     offset: int = typer.Option(0, "--offset", help="Offset for pagination"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Full-text search across all notes."""
     from kasten.search.fts import search_fts
@@ -49,16 +54,26 @@ def search(
         path_glob=path_glob,
         min_words=min_words,
         max_words=max_words,
+        linked_from=linked_from,
+        linked_to=linked_to,
+        min_inbound=min_inbound,
+        has_backlinks=has_backlinks or None,
     )
 
     ranking = {
+        "title_weight": vault.config.search_title_weight,
+        "body_weight": vault.config.search_body_weight,
+        "tags_weight": vault.config.search_tags_weight,
+        "aliases_weight": vault.config.search_aliases_weight,
         "boost_evergreen": vault.config.search_boost_evergreen,
         "penalize_deprecated": vault.config.search_penalize_deprecated,
         "penalize_stale": vault.config.search_penalize_stale,
     }
     results = search_fts(vault.db, query, filters=filters, limit=limit, offset=offset, ranking=ranking)
 
-    if include_body and results:
+    # Auto-include body in JSON mode (agents almost always need it)
+    want_body = include_body or (json_output and not no_body)
+    if want_body and results:
         for r in results:
             row = vault.db.execute(
                 "SELECT body FROM note_content WHERE note_id = ?", (r["id"],)

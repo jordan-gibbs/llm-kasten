@@ -10,10 +10,11 @@ from kasten.models.output import error, success
 
 def repair(
     stub_broken: bool = typer.Option(True, "--stub/--no-stub", help="Create stubs for broken links"),
+    enrich: bool = typer.Option(True, "--enrich/--no-enrich", help="Auto-tag and auto-summarize notes"),
     promote_notes: bool = typer.Option(True, "--promote/--no-promote", help="Auto-promote qualifying notes"),
     rebuild_index: bool = typer.Option(True, "--index/--no-index", help="Rebuild index pages"),
     update_docs: bool = typer.Option(True, "--docs/--no-docs", help="Update CLAUDE.md/AGENTS.md"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Repair and rebuild the vault — full sync, fix broken links, promote notes, rebuild indexes."""
     from kasten.core.vault import Vault, VaultError
@@ -31,7 +32,7 @@ def repair(
 
     # Step 1: Force sync — rebuild DB from all files
     if not json_output:
-        console.print("[bold]1/5 Syncing...[/]")
+        console.print("[bold]1/6 Syncing...[/]")
     from kasten.core.sync import compute_sync_plan, execute_sync
     plan = compute_sync_plan(vault, force=True)
     result = execute_sync(vault, plan)
@@ -49,7 +50,7 @@ def repair(
     stubs_created = 0
     if stub_broken:
         if not json_output:
-            console.print("[bold]2/5 Stubbing broken links...[/]")
+            console.print("[bold]2/6 Stubbing broken links...[/]")
         from kasten.core.note import write_note
         rows = vault.db.execute(
             "SELECT DISTINCT target_ref FROM links WHERE target_id IS NULL"
@@ -75,13 +76,77 @@ def repair(
             console.print(f"  {stubs_created} stubs created")
     else:
         if not json_output:
-            console.print("[dim]2/5 Skipping stubs[/]")
+            console.print("[dim]2/6 Skipping stubs[/]")
 
-    # Step 3: Promote notes
+    # Step 3: Enrich — auto-tag and auto-summarize
+    enriched_count = 0
+    if enrich:
+        if not json_output:
+            console.print("[bold]3/6 Enriching metadata...[/]")
+        from kasten.core.enrich import auto_tag, auto_summary
+        from kasten.core.frontmatter import parse_frontmatter as _parse_fm, serialize_frontmatter as _ser_fm
+        from datetime import datetime as _dt, timezone as _tz
+
+        # Get existing tag vocabulary
+        tag_vocab = [
+            {"tag": r["tag"], "count": r["c"]}
+            for r in vault.db.execute("SELECT tag, COUNT(*) as c FROM tags GROUP BY tag ORDER BY c DESC")
+        ]
+
+        # Find notes missing tags or summary
+        deficient = vault.db.execute(
+            "SELECT n.id, n.path, n.summary FROM notes n "
+            "LEFT JOIN note_content nc ON n.id = nc.note_id "
+            "WHERE n.type NOT IN ('index', 'raw') AND ("
+            "  n.id NOT IN (SELECT DISTINCT note_id FROM tags) OR "
+            "  n.summary IS NULL OR LENGTH(TRIM(COALESCE(n.summary, ''))) = 0"
+            ")"
+        ).fetchall()
+
+        for row in deficient:
+            try:
+                fp = vault.root / row["path"]
+                meta, body = _parse_fm(fp.read_text(encoding="utf-8-sig"))
+                changed = False
+
+                # Auto-tag if no tags
+                if not meta.tags:
+                    from kasten.core.note import strip_markdown
+                    body_plain = strip_markdown(body)
+                    suggested = auto_tag(body_plain, tag_vocab)
+                    if suggested:
+                        meta.tags = suggested
+                        changed = True
+
+                # Auto-summary if no summary
+                if not meta.summary or not meta.summary.strip():
+                    suggested = auto_summary(body)
+                    if suggested:
+                        meta.summary = suggested
+                        changed = True
+
+                if changed:
+                    meta.updated = _dt.now(_tz.utc)
+                    fp.write_text(_ser_fm(meta) + "\n" + body, encoding="utf-8")
+                    enriched_count += 1
+            except Exception:
+                pass
+
+        if enriched_count:
+            plan = compute_sync_plan(vault)
+            execute_sync(vault, plan)
+        report["enriched"] = enriched_count
+        if not json_output:
+            console.print(f"  {enriched_count} notes enriched")
+    else:
+        if not json_output:
+            console.print("[dim]3/6 Skipping enrichment[/]")
+
+    # Step 4: Promote notes
     promoted_count = 0
     if promote_notes:
         if not json_output:
-            console.print("[bold]3/5 Promoting notes...[/]")
+            console.print("[bold]4/6 Promoting notes...[/]")
         from kasten.core.frontmatter import parse_frontmatter, serialize_frontmatter
         from datetime import datetime, timezone
 
@@ -131,12 +196,12 @@ def repair(
             console.print(f"  {promoted_count} notes promoted")
     else:
         if not json_output:
-            console.print("[dim]3/5 Skipping promotion[/]")
+            console.print("[dim]4/6 Skipping promotion[/]")
 
     # Step 4: Rebuild indexes
     if rebuild_index:
         if not json_output:
-            console.print("[bold]4/5 Rebuilding indexes...[/]")
+            console.print("[bold]5/6 Rebuilding indexes...[/]")
         from kasten.indexgen.generator import IndexGenerator
         gen = IndexGenerator(vault)
         built = gen.build_all()
@@ -148,12 +213,12 @@ def repair(
             console.print(f"  {len(built)} index pages built")
     else:
         if not json_output:
-            console.print("[dim]4/5 Skipping indexes[/]")
+            console.print("[dim]5/6 Skipping indexes[/]")
 
     # Step 5: Update agent docs
     if update_docs:
         if not json_output:
-            console.print("[bold]5/5 Updating agent docs...[/]")
+            console.print("[bold]6/6 Updating agent docs...[/]")
         from kasten.core.agent_docs import inject_agent_docs
         modified = inject_agent_docs(vault.root)
         report["agent_docs"] = modified
@@ -165,7 +230,7 @@ def repair(
                 console.print("  Already up to date")
     else:
         if not json_output:
-            console.print("[dim]5/5 Skipping agent docs[/]")
+            console.print("[dim]6/6 Skipping agent docs[/]")
 
     # Final lint summary
     broken = vault.db.execute("SELECT COUNT(*) as c FROM links WHERE target_id IS NULL").fetchone()["c"]

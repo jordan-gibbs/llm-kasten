@@ -9,7 +9,7 @@ from kasten.models.output import error, success
 
 
 def diff(
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show what changed since the last sync."""
     from kasten.core.sync import compute_sync_plan

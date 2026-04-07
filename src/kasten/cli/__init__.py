@@ -34,11 +34,14 @@ from kasten.cli.import_cmd import import_vault as _import  # noqa: E402
 from kasten.cli.watch import watch as _watch  # noqa: E402
 from kasten.cli.serve import serve as _serve  # noqa: E402
 from kasten.cli.repair import repair as _repair  # noqa: E402
+from kasten.cli.note import note_tags as _tags, note_show as _show  # noqa: E402
 
 app.command("init")(_init)
 app.command("status")(_status)
 app.command("sync")(_sync)
 app.command("search")(_search)
+app.command("tags")(_tags)
+app.command("show", hidden=True)(_show)
 app.command("dedup")(_dedup)
 app.command("import")(_import)
 app.command("repair")(_repair)
@@ -59,6 +62,7 @@ from kasten.cli.topic import app as topic_app  # noqa: E402
 from kasten.cli.batch import app as batch_app  # noqa: E402
 from kasten.cli.template import app as template_app  # noqa: E402
 from kasten.cli.git_cmd import app as git_app  # noqa: E402
+from kasten.cli.tag import app as tag_app  # noqa: E402
 
 app.add_typer(note_app, name="note", help="Note CRUD operations.")
 app.add_typer(graph_app, name="graph", help="Knowledge graph and link analysis.")
@@ -73,3 +77,4 @@ app.add_typer(topic_app, name="topic", help="Topic hierarchy.")
 app.add_typer(batch_app, name="batch", help="Bulk operations.")
 app.add_typer(template_app, name="template", help="Note templates.")
 app.add_typer(git_app, name="git", help="Git integration.")
+app.add_typer(tag_app, name="tag", help="Tag management.")

@@ -5,30 +5,14 @@ from __future__ import annotations
 import typer
 
 from kasten.cli._output import console, output
+from kasten.core.similarity import shingle, jaccard
 from kasten.models.output import success
-
-
-def _shingle(text: str, n: int = 3) -> set[str]:
-    """Extract word-level n-grams (shingles) from text."""
-    words = text.lower().split()
-    if len(words) < n:
-        return {" ".join(words)} if words else set()
-    return {" ".join(words[i : i + n]) for i in range(len(words) - n + 1)}
-
-
-def _jaccard(a: set, b: set) -> float:
-    """Jaccard similarity between two sets."""
-    if not a or not b:
-        return 0.0
-    intersection = len(a & b)
-    union = len(a | b)
-    return intersection / union if union else 0.0
 
 
 def dedup(
     threshold: float = typer.Option(0.6, "--threshold", "-t", help="Similarity threshold (0.0-1.0)"),
     limit: int = typer.Option(20, "--limit", "-l", help="Max pairs to show"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Find near-duplicate notes by content similarity."""
     from kasten.core.vault import Vault, VaultError
@@ -62,7 +46,7 @@ def dedup(
     # Build shingle sets
     notes = []
     for row in rows:
-        shingles = _shingle(row["body_plain"])
+        shingles = shingle(row["body_plain"])
         notes.append({
             "id": row["id"],
             "title": row["title"],
@@ -74,7 +58,7 @@ def dedup(
     pairs = []
     for i in range(len(notes)):
         for j in range(i + 1, len(notes)):
-            sim = _jaccard(notes[i]["shingles"], notes[j]["shingles"])
+            sim = jaccard(notes[i]["shingles"], notes[j]["shingles"])
             if sim >= threshold:
                 pairs.append({
                     "similarity": round(sim, 3),

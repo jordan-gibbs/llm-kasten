@@ -17,7 +17,7 @@ def ask(
     context_notes: int = typer.Option(5, "--context", "-c", help="Number of context notes"),
     model: str | None = typer.Option(None, "--model", "-m", help="Override LLM model"),
     show_sources: bool = typer.Option(False, "--show-sources", help="Show source notes"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Ask a question against the knowledge base."""
     if ctx.invoked_subcommand is not None:

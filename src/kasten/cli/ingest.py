@@ -18,7 +18,7 @@ def ingest_file(
     title: str | None = typer.Option(None, "--title", "-T", help="Override title"),
     tags: list[str] = typer.Option([], "--tag", "-t", help="Tags"),
     do_compile: bool = typer.Option(False, "--compile", help="Compile after ingest"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Ingest a local file as a raw note."""
     from kasten.core.vault import Vault
@@ -39,7 +39,7 @@ def ingest_web(
     title: str | None = typer.Option(None, "--title", "-T", help="Override title"),
     tags: list[str] = typer.Option([], "--tag", "-t", help="Tags"),
     do_compile: bool = typer.Option(False, "--compile", help="Compile after ingest"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Ingest a web page as a raw note."""
     try:
@@ -70,7 +70,7 @@ def ingest_pdf(
     tags: list[str] = typer.Option([], "--tag", "-t", help="Tags"),
     pages: str | None = typer.Option(None, "--pages", help="Page range, e.g. '1-5,10'"),
     do_compile: bool = typer.Option(False, "--compile", help="Compile after ingest"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Ingest a PDF as a raw note."""
     try:
@@ -97,7 +97,7 @@ def ingest_pdf(
 @app.command("list")
 def ingest_list(
     status_filter: str | None = typer.Option(None, "--status", "-s", help="Filter: raw|compiled|failed"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show ingestion log."""
     from kasten.core.vault import Vault

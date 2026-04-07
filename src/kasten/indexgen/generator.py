@@ -13,7 +13,12 @@ class IndexGenerator:
         self.index_dir.mkdir(exist_ok=True)
 
     def build_all(self) -> list[str]:
-        """Build all index pages. Returns list of relative paths written."""
+        """Build all index pages. Cleans up stale pages first."""
+        # Delete all existing index pages before regenerating
+        if self.index_dir.exists():
+            for old_file in self.index_dir.glob("*.md"):
+                old_file.unlink()
+
         built = []
         built.append(self._build_master_index())
         built.append(self._build_tags_index())
@@ -22,6 +27,9 @@ class IndexGenerator:
         built.append(self._build_orphans())
         built.append(self._build_stats())
         built.append(self._build_raw_pending())
+        built.extend(self._build_by_month())
+        built.append(self._build_stale())
+        built.append(self._build_most_linked())
         return [b for b in built if b]
 
     def _write_index(self, filename: str, title: str, body: str) -> str:
@@ -187,3 +195,63 @@ class IndexGenerator:
             lines.append(f"- `{date}` [[{r['id']}]] — {r['title']}")
 
         return self._write_index("_raw-pending.md", "Raw Pending", "\n".join(lines))
+
+    def _build_by_month(self) -> list[str]:
+        """Generate per-month index pages for months with 3+ notes."""
+        rows = self.vault.db.execute(
+            "SELECT id, title, status, summary, created FROM notes "
+            "WHERE type NOT IN ('index') AND created IS NOT NULL "
+            "ORDER BY created DESC"
+        ).fetchall()
+
+        months: dict[str, list] = {}
+        for r in rows:
+            created = r["created"] or ""
+            month = created[:7] if len(created) >= 7 else "unknown"
+            months.setdefault(month, []).append(r)
+
+        built = []
+        for month, notes in sorted(months.items(), reverse=True):
+            if len(notes) < 3 or month == "unknown":
+                continue
+            lines = [f"# Notes from {month}\n", f"**{len(notes)}** notes.\n"]
+            for r in notes:
+                date = (r["created"] or "")[:10]
+                summary = f" — {r['summary']}" if r["summary"] else ""
+                lines.append(f"- `{date}` [[{r['id']}]] — {r['title']}{summary}")
+            built.append(self._write_index(f"_month-{month}.md", f"Month: {month}", "\n".join(lines)))
+        return built
+
+    def _build_stale(self) -> str:
+        """Evergreen notes not updated in 6+ months — candidates for review."""
+        from datetime import datetime, timezone, timedelta
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=180)).isoformat()
+        rows = self.vault.db.execute(
+            "SELECT id, title, status, updated, created, word_count FROM notes "
+            "WHERE status = 'evergreen' AND type NOT IN ('index') "
+            "AND COALESCE(updated, created) < ? "
+            "ORDER BY COALESCE(updated, created)",
+            (cutoff,),
+        ).fetchall()
+
+        lines = ["# Stale Notes\n", f"**{len(rows)}** evergreen notes not updated in 6+ months.\n"]
+        for r in rows:
+            date = (r["updated"] or r["created"] or "")[:10]
+            lines.append(f"- `{date}` [[{r['id']}]] — {r['title']} ({r['word_count']}w)")
+
+        return self._write_index("_stale.md", "Stale Notes", "\n".join(lines))
+
+    def _build_most_linked(self) -> str:
+        """Top 30 notes by inbound link count."""
+        rows = self.vault.db.execute(
+            "SELECT l.target_id as id, n.title, COUNT(*) as inbound "
+            "FROM links l JOIN notes n ON l.target_id = n.id "
+            "WHERE l.target_id IS NOT NULL "
+            "GROUP BY l.target_id ORDER BY inbound DESC LIMIT 30"
+        ).fetchall()
+
+        lines = ["# Most Linked Notes\n", f"Top {len(rows)} notes by inbound link count.\n"]
+        for r in rows:
+            lines.append(f"- [[{r['id']}]] — {r['title']} ({r['inbound']} inbound links)")
+
+        return self._write_index("_most-linked.md", "Most Linked", "\n".join(lines))

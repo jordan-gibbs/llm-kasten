@@ -5,7 +5,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 SCHEMA_SQL = """
 PRAGMA journal_mode=WAL;
@@ -92,6 +92,11 @@ CREATE TABLE IF NOT EXISTS embeddings (
     dimensions INTEGER NOT NULL,
     vector     BLOB NOT NULL,
     created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS tag_aliases (
+    alias     TEXT PRIMARY KEY,
+    canonical TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS ingest_log (

@@ -12,6 +12,8 @@ app = typer.Typer(invoke_without_command=True)
 RULES = {
     "missing-title": "Notes without a title",
     "missing-tags": "Notes without any tags",
+    "missing-summary": "Notes without a summary",
+    "singleton-tags": "Tags used by only one note",
     "broken-links": "Wiki-links that don't resolve",
     "orphaned-notes": "Notes with no inbound or outbound links",
     "duplicate-ids": "Multiple notes with the same ID",
@@ -29,7 +31,7 @@ def lint(
     ctx: typer.Context,
     fix: bool = typer.Option(False, "--fix", help="Auto-fix what's possible"),
     rule: str | None = typer.Option(None, "--rule", "-r", help="Run specific rule only"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Health-check the vault."""
     if ctx.invoked_subcommand is not None:
@@ -63,10 +65,35 @@ def lint(
         ):
             issues.append({
                 "rule": "missing-tags",
-                "severity": "info",
+                "severity": "warning",
                 "note_id": row["id"],
                 "note_path": row["path"],
                 "message": "Note has no tags.",
+            })
+
+    if "missing-summary" in rules_to_run:
+        for row in conn.execute(
+            "SELECT n.id, n.path FROM notes n "
+            "WHERE n.type NOT IN ('index','raw') "
+            "AND (n.summary IS NULL OR LENGTH(TRIM(n.summary)) = 0)"
+        ):
+            issues.append({
+                "rule": "missing-summary",
+                "severity": "warning",
+                "note_id": row["id"],
+                "note_path": row["path"],
+                "message": "Note has no summary. Add one for better search and listings.",
+            })
+
+    if "singleton-tags" in rules_to_run:
+        for row in conn.execute(
+            "SELECT tag, COUNT(*) as c FROM tags GROUP BY tag HAVING c = 1"
+        ):
+            issues.append({
+                "rule": "singleton-tags",
+                "severity": "info",
+                "note_id": row["tag"],
+                "message": f"Tag '{row['tag']}' is used by only 1 note. Consider merging.",
             })
 
     if "broken-links" in rules_to_run:

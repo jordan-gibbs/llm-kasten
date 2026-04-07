@@ -13,7 +13,7 @@ app = typer.Typer()
 @app.command("build")
 def index_build(
     force: bool = typer.Option(False, "--force", "-f", help="Rebuild all indexes"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Regenerate all index pages."""
     from kasten.core.vault import Vault
@@ -34,7 +34,7 @@ def index_build(
 
 @app.command("list")
 def index_list(
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show which index pages exist."""
     from kasten.core.vault import Vault
@@ -56,7 +56,7 @@ def index_list(
 @app.command("show")
 def index_show(
     name: str = typer.Argument(..., help="Index page name (e.g. _tags)"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Display a specific index page."""
     from kasten.core.vault import Vault

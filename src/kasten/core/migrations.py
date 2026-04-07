@@ -7,9 +7,12 @@ import sqlite3
 # Each migration is a SQL script that upgrades from version N-1 to N.
 # Migrations MUST be idempotent (safe to re-run).
 MIGRATIONS: dict[int, str] = {
-    # v1 → v2: no-op, v1 is the initial schema with all current fields
-    # Future migrations go here:
-    # 3: "ALTER TABLE notes ADD COLUMN new_field TEXT;",
+    2: """
+CREATE TABLE IF NOT EXISTS tag_aliases (
+    alias     TEXT PRIMARY KEY,
+    canonical TEXT NOT NULL
+);
+""",
 }
 
 

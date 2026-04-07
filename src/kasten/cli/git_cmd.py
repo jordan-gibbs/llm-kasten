@@ -28,7 +28,7 @@ def _run_git(vault_root: Path, args: list[str]) -> tuple[int, str]:
 def git_log(
     limit: int = typer.Option(20, "--limit", "-l", help="Max commits"),
     since: str | None = typer.Option(None, "--since", help="Since date (YYYY-MM-DD)"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show notes changed in recent commits."""
     from kasten.core.vault import Vault, VaultError
@@ -89,7 +89,7 @@ def git_log(
 @app.command("blame")
 def git_blame(
     note_id: str = typer.Argument(..., help="Note ID"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show git blame for a note file."""
     from kasten.core.vault import Vault
@@ -123,7 +123,7 @@ def git_blame(
 
 @app.command("changed")
 def git_changed(
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show notes with uncommitted changes."""
     from kasten.core.vault import Vault

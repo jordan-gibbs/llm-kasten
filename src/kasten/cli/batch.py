@@ -104,7 +104,7 @@ def batch_tag_add(
     filter_tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by existing tag"),
     parent: str | None = typer.Option(None, "--parent", "-p", help="Filter by parent topic"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview changes"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Add a tag to matching notes."""
     vault = _discover_vault(json_output)
@@ -142,7 +142,7 @@ def batch_tag_remove(
     filter_tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by existing tag"),
     parent: str | None = typer.Option(None, "--parent", "-p", help="Filter by parent topic"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview changes"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Remove a tag from matching notes."""
     vault = _discover_vault(json_output)
@@ -182,7 +182,7 @@ def batch_set_status(
     tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by tag"),
     parent: str | None = typer.Option(None, "--parent", "-p", help="Filter by parent topic"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview changes"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Set status on matching notes."""
     if new_status not in VALID_STATUSES:
@@ -230,7 +230,7 @@ def batch_deprecate(
     tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by tag"),
     parent: str | None = typer.Option(None, "--parent", "-p", help="Filter by parent topic"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview changes"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Mark matching notes as deprecated."""
     vault = _discover_vault(json_output)
@@ -273,7 +273,7 @@ def batch_set_parent(
     tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by tag"),
     parent: str | None = typer.Option(None, "--parent", "-p", help="Filter by current parent"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview changes"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Set parent topic on matching notes."""
     vault = _discover_vault(json_output)

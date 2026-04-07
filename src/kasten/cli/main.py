@@ -18,7 +18,7 @@ def init(
     name: str = typer.Option("Knowledge Base", "--name", "-n", help="Vault name"),
     knowledge_dir: str = typer.Option("knowledge", "--dir", "-d", help="Knowledge directory name"),
     agents: list[str] = typer.Option(["claude"], "--agents", "-a", help="Agent config files: claude|agents|gemini|copilot"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Initialize a new kasten vault."""
     from kasten.core.vault import Vault, VaultError
@@ -40,7 +40,7 @@ def init(
 
 @app.command()
 def status(
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show vault health and statistics."""
     from kasten.core.vault import Vault, VaultError
@@ -113,7 +113,7 @@ def status(
 def sync(
     force: bool = typer.Option(False, "--force", "-f", help="Full rescan ignoring mtime/hash"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would change"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Sync database with markdown files on disk."""
     from kasten.core.sync import compute_sync_plan, execute_sync

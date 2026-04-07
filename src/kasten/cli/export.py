@@ -64,7 +64,7 @@ def export_vault(
     status: str | None = typer.Option(None, "--status", "-s", help="Filter by status"),
     parent: str | None = typer.Option(None, "--parent", "-p", help="Filter by parent topic"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview what would be exported"),
-    json_output: bool = typer.Option(False, "--json", help="JSON output"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Export a subset of notes to another directory."""
     import shutil

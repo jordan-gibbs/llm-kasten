@@ -17,7 +17,6 @@ kasten init .
 kasten search "auth" -j   # structured JSON with full note bodies
 ```
 
-<!-- TODO: Add terminal recording GIF here -->
 
 ## How it works
 

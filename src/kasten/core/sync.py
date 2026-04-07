@@ -194,6 +194,13 @@ def _upsert_note_to_db(conn, note, synced_at: str, file_mtime: float = 0) -> Non
         pass
     for tag in meta.tags:
         resolved = alias_map.get(tag, tag)
+        # Auto-normalize common plurals: if "transformers" -> check if "transformer" exists as a tag
+        if resolved.endswith("s") and len(resolved) > 3:
+            singular = resolved[:-1]
+            if singular in alias_map.values() or conn.execute(
+                "SELECT 1 FROM tags WHERE tag = ? LIMIT 1", (singular,)
+            ).fetchone():
+                resolved = singular
         conn.execute("INSERT OR IGNORE INTO tags (note_id, tag) VALUES (?, ?)", (meta.id, resolved))
 
     # Update aliases

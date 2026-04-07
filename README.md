@@ -15,8 +15,7 @@ pip install llm-kasten
 Optional extras:
 
 ```bash
-pip install llm-kasten[web]         # Web page ingestion (httpx + beautifulsoup4)
-pip install llm-kasten[pdf]         # PDF ingestion (pymupdf)
+pip install llm-kasten[mcp]         # MCP server for Claude Desktop, Cursor, etc.
 ```
 
 ## Quick start
@@ -129,8 +128,6 @@ kasten sync                           # Rebuild index from files
 ### Advanced
 
 ```bash
-kasten ingest file ./doc.md --tag ref --json   # Ingest local files
-kasten ingest web "https://..." --json         # Ingest web pages
 kasten export json --json                      # Full JSON dump
 kasten export vault ./out --tag ml --json      # Export filtered subset
 kasten import ./other-kb --prefix imported --json
@@ -166,22 +163,50 @@ Every command supports `--json` for structured output with a consistent envelope
 
 If any of these files already exist in the repo, kasten appends a marked section (idempotent -- safe to run repeatedly). Update with `kasten config agent-docs`.
 
-### Agent workflow
+### CLI (primary interface for coding agents)
+
+Coding agents (Claude Code, Codex, Gemini CLI) use kasten via CLI commands with `-j` for JSON:
 
 ```bash
 # Search with full bodies (one call instead of search + read)
-kasten search "auth" --include-body --json
+kasten search "auth" -j
+
+# Read multiple notes at once
+kasten note show auth-flow session-mgmt -j
 
 # Create a note (use --body-file for long content)
 echo "# Content" > /tmp/note.md
-kasten note new "Title" --body-file /tmp/note.md --summary "..." --json
+kasten note new "Title" --body-file /tmp/note.md --summary "..." -j
 
 # Update metadata without touching body
-kasten note update auth-flow --status evergreen --add-tag reviewed --json
+kasten note update auth-flow --status evergreen --add-tag reviewed -j
 
 # Fix everything
-kasten repair --json
+kasten repair -j
 ```
+
+### MCP server (optional, for Claude Desktop / Cursor)
+
+For agents that can't shell out (Claude Desktop, Cursor), kasten exposes an MCP server with 8 tools:
+
+```bash
+pip install llm-kasten[mcp]
+```
+
+Configure in `claude_desktop_config.json` or `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "kasten": {
+      "command": "kasten",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+Tools: `search_notes`, `read_note`, `read_many`, `list_notes`, `get_backlinks`, `get_hubs`, `vault_status`, `lint_vault`. Read-only -- agents create notes by writing files directly.
 
 ## Configuration
 

@@ -1,4 +1,4 @@
-"""Tag management CLI — list, alias, suggest merges, clean."""
+"""Tag management CLI — list, alias, suggest merges."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ app = typer.Typer()
 
 @app.command("list")
 def tag_list(
+    min_count: int = typer.Option(1, "--min", "-m", help="Only show tags with N+ notes"),
     json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """List all tags with note counts."""
@@ -22,7 +23,8 @@ def tag_list(
     vault = Vault.discover()
     vault.auto_sync()
     rows = vault.db.execute(
-        "SELECT tag, COUNT(*) as count FROM tags GROUP BY tag ORDER BY count DESC"
+        "SELECT tag, COUNT(*) as count FROM tags GROUP BY tag HAVING count >= ? ORDER BY count DESC",
+        (min_count,),
     ).fetchall()
     tags = [{"tag": r["tag"], "count": r["count"]} for r in rows]
 
@@ -45,7 +47,7 @@ def tag_alias(
     to_tag: str = typer.Argument(..., help="Canonical tag to map to"),
     json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
-    """Create a tag alias. Notes with the variant tag will be indexed under the canonical tag."""
+    """Create a tag alias. Notes with the variant will be indexed under the canonical."""
     from kasten.core.vault import Vault
 
     vault = Vault.discover()
@@ -67,7 +69,7 @@ def tag_suggest(
     threshold: float = typer.Option(0.7, "--threshold", help="Similarity threshold"),
     json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
-    """Suggest tag merges based on string similarity."""
+    """Suggest tag merges for singletons similar to popular tags."""
     from kasten.core.vault import Vault
 
     vault = Vault.discover()
@@ -78,22 +80,37 @@ def tag_suggest(
     ).fetchall()
     tags = [(r["tag"], r["count"]) for r in rows]
 
-    # Find similar tag pairs
     suggestions = []
     popular = [t for t in tags if t[1] >= 3]
     singletons = [t for t in tags if t[1] == 1]
 
     for stag, _scount in singletons:
+        best_match = None
+        best_sim = 0.0
         for ptag, pcount in popular:
             sim = SequenceMatcher(None, stag, ptag).ratio()
-            if sim >= threshold and stag != ptag:
-                suggestions.append({
-                    "singleton": stag,
-                    "suggested_canonical": ptag,
-                    "similarity": round(sim, 2),
-                    "canonical_count": pcount,
-                })
-                break  # Best match
+            if sim >= threshold and stag != ptag and sim > best_sim:
+                best_match = (ptag, pcount, sim)
+                best_sim = sim
+        if best_match:
+            ptag, pcount, sim = best_match
+            suggestions.append({
+                "singleton": stag,
+                "suggested_canonical": ptag,
+                "similarity": round(sim, 2),
+                "canonical_count": pcount,
+            })
+
+    # Also catch simple plurals (transformers -> transformer)
+    tag_set = {t[0] for t in tags}
+    for stag, _scount in singletons:
+        if stag.endswith("s") and stag[:-1] in tag_set and stag not in [s["singleton"] for s in suggestions]:
+            suggestions.append({
+                "singleton": stag,
+                "suggested_canonical": stag[:-1],
+                "similarity": 0.95,
+                "canonical_count": next((c for t, c in tags if t == stag[:-1]), 0),
+            })
 
     suggestions.sort(key=lambda s: s["similarity"], reverse=True)
 
@@ -107,6 +124,6 @@ def tag_suggest(
         for s in suggestions[:30]:
             console.print(
                 f"  {s['singleton']:30s} -> {s['suggested_canonical']:20s} "
-                f"({s['similarity']:.0%} similar, {s['canonical_count']} notes)"
+                f"({s['similarity']:.0%}, {s['canonical_count']} notes)"
             )
         console.print("\n[dim]Apply with: kasten tag alias <from> <to>[/]")

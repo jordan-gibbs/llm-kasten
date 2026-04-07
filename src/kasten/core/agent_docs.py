@@ -52,7 +52,7 @@ kasten status --json                  # Vault overview
 ### Note quality requirements
 
 Every note MUST have:
-- At least one tag (`--tag`). Check existing tags with `kasten tags -j`.
+- At least one tag (`--tag`). REUSE existing tags from `kasten tags -j` -- do not invent new ones unless necessary.
 - A summary (`--summary`). One sentence, under 120 characters.
 - A body with meaningful content (50+ words).
 - Use `--body-file` instead of `--body` to avoid shell escaping issues.

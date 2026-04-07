@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC
+
 import typer
 
 from kasten.cli._output import console, output
@@ -83,9 +85,11 @@ def repair(
     if enrich:
         if not json_output:
             console.print("[bold]3/6 Enriching metadata...[/]")
-        from kasten.core.enrich import auto_tag, auto_summary
-        from kasten.core.frontmatter import parse_frontmatter as _parse_fm, serialize_frontmatter as _ser_fm
-        from datetime import datetime as _dt, timezone as _tz
+        from datetime import datetime as _dt
+
+        from kasten.core.enrich import auto_summary, auto_tag
+        from kasten.core.frontmatter import parse_frontmatter as _parse_fm
+        from kasten.core.frontmatter import serialize_frontmatter as _ser_fm
 
         # Get existing tag vocabulary
         tag_vocab = [
@@ -126,7 +130,7 @@ def repair(
                         changed = True
 
                 if changed:
-                    meta.updated = _dt.now(_tz.utc)
+                    meta.updated = _dt.now(UTC)
                     fp.write_text(_ser_fm(meta) + "\n" + body, encoding="utf-8")
                     enriched_count += 1
             except Exception:
@@ -147,8 +151,9 @@ def repair(
     if promote_notes:
         if not json_output:
             console.print("[bold]4/6 Promoting notes...[/]")
+        from datetime import datetime
+
         from kasten.core.frontmatter import parse_frontmatter, serialize_frontmatter
-        from datetime import datetime, timezone
 
         # Draft -> Review
         drafts = vault.db.execute("""
@@ -163,7 +168,7 @@ def repair(
                 fp = vault.root / row["path"]
                 meta, body = parse_frontmatter(fp.read_text(encoding="utf-8-sig"))
                 meta.status = "review"
-                meta.updated = datetime.now(timezone.utc)
+                meta.updated = datetime.now(UTC)
                 fp.write_text(serialize_frontmatter(meta) + "\n" + body, encoding="utf-8")
                 promoted_count += 1
             except Exception:
@@ -182,7 +187,7 @@ def repair(
                 fp = vault.root / row["path"]
                 meta, body = parse_frontmatter(fp.read_text(encoding="utf-8-sig"))
                 meta.status = "evergreen"
-                meta.updated = datetime.now(timezone.utc)
+                meta.updated = datetime.now(UTC)
                 fp.write_text(serialize_frontmatter(meta) + "\n" + body, encoding="utf-8")
                 promoted_count += 1
             except Exception:

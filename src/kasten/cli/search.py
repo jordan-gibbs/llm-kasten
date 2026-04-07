@@ -30,9 +30,9 @@ def search(
     json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Full-text search across all notes."""
-    from kasten.search.fts import search_fts
-    from kasten.search.filters import SearchFilters
     from kasten.core.vault import Vault, VaultError
+    from kasten.search.filters import SearchFilters
+    from kasten.search.fts import search_fts
 
     try:
         vault = Vault.discover()

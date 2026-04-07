@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 
 from kasten.core.frontmatter import render_note
 from kasten.models.note import NoteMeta, slugify
@@ -77,11 +76,11 @@ def ingest_url(
         status="draft",
         source=url,
         tags=tags or [],
-        created=datetime.now(timezone.utc),
+        created=datetime.now(UTC),
     )
     dest.write_text(render_note(meta, md_content), encoding="utf-8")
 
-    now_iso = datetime.now(timezone.utc).isoformat()
+    now_iso = datetime.now(UTC).isoformat()
     vault.db.execute(
         "INSERT INTO ingest_log (source_url, source_type, raw_path, ingested_at, status) "
         "VALUES (?, 'web', ?, ?, 'raw')",

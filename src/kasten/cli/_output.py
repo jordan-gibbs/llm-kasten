@@ -28,9 +28,7 @@ def _output_json(data: Any) -> None:
     """Output as JSON. Uses sys.stdout with UTF-8 to avoid Windows encoding issues."""
     import sys
 
-    if isinstance(data, Envelope):
-        text = data.model_dump_json(indent=2, exclude_none=True)
-    elif hasattr(data, "model_dump_json"):
+    if isinstance(data, Envelope) or hasattr(data, "model_dump_json"):
         text = data.model_dump_json(indent=2, exclude_none=True)
     else:
         text = json.dumps(data, indent=2, default=str)

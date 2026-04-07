@@ -140,7 +140,7 @@ def sync(
         if json_output:
             output(success(data, vault=str(vault.root)), json_mode=True)
         else:
-            console.print(f"[bold]Sync plan:[/]")
+            console.print("[bold]Sync plan:[/]")
             console.print(f"  Add: {len(plan.to_add)}")
             console.print(f"  Update: {len(plan.to_update)}")
             console.print(f"  Delete: {len(plan.to_delete)}")

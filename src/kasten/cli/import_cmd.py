@@ -57,10 +57,7 @@ def import_vault(
     imported = []
     for src_file in md_files:
         rel = src_file.relative_to(source_path).as_posix()
-        if prefix:
-            dest_rel = f"{prefix}/{rel}"
-        else:
-            dest_rel = rel
+        dest_rel = f"{prefix}/{rel}" if prefix else rel
         # Write into knowledge/notes/, not vault root
         dest = vault.notes_dir / dest_rel
 

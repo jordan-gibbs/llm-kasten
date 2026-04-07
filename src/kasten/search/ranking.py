@@ -16,7 +16,7 @@ def merge_results(
     # Normalize FTS scores
     if fts_results:
         max_fts = max(r["score"] for r in fts_results) or 1
-        for rank, r in enumerate(fts_results):
+        for _rank, r in enumerate(fts_results):
             nid = r["id"]
             scores[nid] = {
                 **r,
@@ -38,7 +38,7 @@ def merge_results(
                 }
 
     # Compute combined score
-    for nid, entry in scores.items():
+    for _nid, entry in scores.items():
         entry["score"] = (
             entry["fts_score"] * fts_weight + entry["semantic_score"] * semantic_weight
         )

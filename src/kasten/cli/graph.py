@@ -191,8 +191,8 @@ def graph_stub(
     json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Create stub notes for all broken [[links]]."""
-    from kasten.core.vault import Vault
     from kasten.core.note import write_note
+    from kasten.core.vault import Vault
 
     vault = Vault.discover()
     vault.auto_sync()

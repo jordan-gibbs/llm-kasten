@@ -68,6 +68,7 @@ def export_vault(
 ) -> None:
     """Export a subset of notes to another directory."""
     import shutil
+
     from kasten.core.vault import Vault
 
     vault = Vault.discover()

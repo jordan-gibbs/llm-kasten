@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator
 
 
-class NoteStatus(str, Enum):
+class NoteStatus(StrEnum):
     DRAFT = "draft"
     REVIEW = "review"
     EVERGREEN = "evergreen"
@@ -18,7 +18,7 @@ class NoteStatus(str, Enum):
     ARCHIVE = "archive"
 
 
-class NoteType(str, Enum):
+class NoteType(StrEnum):
     NOTE = "note"
     RAW = "raw"
     INDEX = "index"
@@ -45,7 +45,7 @@ class NoteMeta(BaseModel):
     title: str
     id: str = ""
     tags: list[str] = Field(default_factory=list)
-    created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated: datetime | None = None
     source: str | None = None
     status: NoteStatus = NoteStatus.DRAFT

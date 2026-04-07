@@ -6,8 +6,7 @@ import hashlib
 import sqlite3
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from fnmatch import fnmatch
+from datetime import UTC, datetime
 from pathlib import Path
 
 from kasten.core.note import read_note, strip_markdown
@@ -87,7 +86,7 @@ def execute_sync(vault, plan: SyncPlan) -> SyncResult:
     """Execute the sync plan within a single transaction for atomicity."""
     result = SyncResult(unchanged=plan.unchanged)
     start = time.monotonic()
-    now_iso = datetime.now(timezone.utc).isoformat()
+    now_iso = datetime.now(UTC).isoformat()
 
     conn = vault.db
     conn.execute("BEGIN IMMEDIATE")

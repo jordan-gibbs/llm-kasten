@@ -16,7 +16,7 @@ app = typer.Typer()
 def _run_git(vault_root: Path, args: list[str]) -> tuple[int, str]:
     """Run a git command and return (returncode, stdout)."""
     result = subprocess.run(
-        ["git"] + args,
+        ["git", *args],
         capture_output=True,
         text=True,
         cwd=str(vault_root),
@@ -117,7 +117,7 @@ def git_blame(
         output(success({"note_id": note_id, "path": row["path"], "blame": out}, vault=str(vault.root)), json_mode=True)
     else:
         # Simplified blame output
-        rc2, simple = _run_git(vault.root, ["blame", "--date=short", row["path"]])
+        _rc2, simple = _run_git(vault.root, ["blame", "--date=short", row["path"]])
         console.print(simple)
 
 

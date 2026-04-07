@@ -16,8 +16,6 @@ Optional extra:
 
 ```bash
 pip install llm-kasten[mcp]         # MCP server for Claude Desktop, Cursor, etc.
-
-```bash
 ```
 
 ## Quick start

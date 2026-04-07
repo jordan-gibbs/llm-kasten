@@ -32,11 +32,12 @@ from kasten.cli.import_cmd import import_vault as _import
 from kasten.cli.main import init as _init
 from kasten.cli.main import status as _status
 from kasten.cli.main import sync as _sync
+from kasten.cli.mcp_cmd import mcp as _mcp
 from kasten.cli.note import note_show as _show
-from kasten.cli.note import note_tags as _tags
 from kasten.cli.repair import repair as _repair
 from kasten.cli.search import search as _search
 from kasten.cli.serve import serve as _serve
+from kasten.cli.tag import tag_list as _tags
 from kasten.cli.watch import watch as _watch
 
 app.command("init")(_init)
@@ -50,6 +51,7 @@ app.command("import")(_import)
 app.command("repair")(_repair)
 app.command("watch")(_watch)
 app.command("serve")(_serve)
+app.command("mcp")(_mcp)
 
 # Sub-apps
 from kasten.cli.batch import app as batch_app
@@ -58,7 +60,6 @@ from kasten.cli.export import app as export_app
 from kasten.cli.git_cmd import app as git_app
 from kasten.cli.graph import app as graph_app
 from kasten.cli.index import app as index_app
-from kasten.cli.ingest import app as ingest_app
 from kasten.cli.lint import app as lint_app
 from kasten.cli.note import app as note_app
 from kasten.cli.tag import app as tag_app
@@ -67,7 +68,6 @@ from kasten.cli.topic import app as topic_app
 
 app.add_typer(note_app, name="note", help="Note CRUD operations.")
 app.add_typer(graph_app, name="graph", help="Knowledge graph and link analysis.")
-app.add_typer(ingest_app, name="ingest", help="Ingest files, URLs, or PDFs.")
 app.add_typer(index_app, name="index", help="Auto-generated index pages.")
 app.add_typer(lint_app, name="lint", help="Health-check the vault.")
 app.add_typer(export_app, name="export", help="Export notes.")

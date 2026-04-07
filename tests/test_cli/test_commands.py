@@ -97,7 +97,7 @@ def test_note_tags(vault_dir: Path):
     runner.invoke(app, ["note", "new", "B", "--tag", "beta"])
     runner.invoke(app, ["sync"])
 
-    result = runner.invoke(app, ["note", "tags", "--json"])
+    result = runner.invoke(app, ["tags", "--json"])
     assert result.exit_code == 0
     data = json.loads(result.output)
     tags = {t["tag"] for t in data["data"]}

@@ -2,143 +2,52 @@
 
 ![LLM-Kasten](assets/hero-graph.svg)
 
-A CLI knowledge base manager built on markdown files. Designed to be driven by both humans and LLM coding agents.
+A CLI that turns markdown files into a searchable, interlinked knowledge base. Built for LLM coding agents. Every command outputs JSON.
 
-kasten turns a directory of `.md` files into a searchable, interlinked knowledge base with full-text search, a link graph, auto-generated indexes, and structured JSON output on every command.
+## The problem
 
-## Install
+AI coding agents (Claude Code, Codex, Cursor, Gemini CLI) are powerful but amnesiac. Every session starts fresh. CLAUDE.md and AGENTS.md help, but they cap out at ~60 useful lines. When your project knowledge grows beyond that -- architecture decisions, API contracts, research notes, domain rules -- agents start hallucinating what they can't remember.
+
+## What kasten does
+
+kasten gives agents a searchable knowledge base they can query on demand, instead of cramming everything into a flat config file. Notes are plain markdown with YAML frontmatter. kasten indexes them with SQLite FTS5, tracks `[[wiki-links]]` with backlinks, and outputs structured JSON from every command.
 
 ```bash
 pip install llm-kasten
-```
-
-Optional extra:
-
-```bash
-pip install llm-kasten[mcp]         # MCP server for Claude Desktop, Cursor, etc.
-```
-
-## Quick start
-
-```bash
 kasten init .
-kasten note new "My First Note" --tag getting-started --body "# Hello"
-kasten search "hello" --json
+kasten note new "Auth Architecture" --tag auth --body-file /tmp/auth.md --summary "JWT with RS256"
+kasten search "authentication" -j    # Agent gets structured results with full bodies
 ```
 
-## How it works
+The agent searches what it needs, when it needs it. No context window bloat.
 
-`kasten init` creates a `.kasten/` directory (config and SQLite index) and a `knowledge/` directory (your notes):
+## How agents use it
 
-```
-your-repo/
-  .kasten/             # Hidden: config, database, templates
-  knowledge/
-    notes/             # Your markdown notes
-    index/             # Auto-generated wiki pages
-  CLAUDE.md            # Agent docs (auto-created)
-```
+kasten auto-injects a usage guide into your CLAUDE.md (and AGENTS.md, GEMINI.md, copilot-instructions.md) at `kasten init`. From then on, any agent working in the repo knows these commands exist.
 
-Markdown files are the source of truth. The SQLite database is a derived cache rebuilt from files at any time with `kasten sync --force`.
-
-### Note format
-
-Every note is a markdown file with YAML frontmatter:
-
-```yaml
----
-title: "Auth Architecture"
-id: "auth-architecture"
-tags: [auth, security, jwt]
-status: "evergreen"
-summary: "JWT auth with RS256 and refresh token rotation"
-parent: "backend/auth"
-created: "2026-04-06T00:00:00+00:00"
----
-
-# Auth Architecture
-
-Content here. Link to other notes with [[session-management]] or [[jwt-tokens|JWT]].
-```
-
-### Linking
-
-Use `[[note-id]]` to link between notes. kasten tracks backlinks, detects broken links, finds orphan notes, and ranks hub notes by inbound link count.
-
-### Status lifecycle
-
-```
-draft --> review --> evergreen --> stale --> deprecated --> archive
-```
-
-`kasten repair` auto-promotes notes that meet quality criteria (has summary, tags, sufficient word count, links).
-
-## Commands
-
-### Search and read
+A typical agent workflow:
 
 ```bash
-kasten search "query"                        # Full-text search (FTS5 + BM25)
-kasten search "query" --tag ml --status evergreen --json
-kasten search "query" --include-body --json  # Include full note bodies
-kasten note show <id> --json                 # Read a note
-kasten note show <id1> <id2> --json          # Read multiple at once
-kasten note list --tag x --status y --json   # Filtered listing
+# Agent needs context on auth -- searches the knowledge base
+kasten search "auth" -j
+# Returns: [{id, title, tags, summary, body, score}, ...]
+
+# Agent reads specific notes it found
+kasten note show auth-architecture session-management -j
+
+# Agent writes new knowledge after completing a task
+echo "# API Rate Limiting\n\n..." > /tmp/rate-limits.md
+kasten note new "API Rate Limiting" --tag api --tag security \
+  --body-file /tmp/rate-limits.md --summary "Token bucket with Redis" -j
+
+# Agent updates metadata
+kasten note update auth-architecture --status evergreen --add-tag reviewed -j
+
+# Agent checks vault health
+kasten lint -j
 ```
 
-### Create and update
-
-```bash
-kasten note new "Title" --tag t1 --body "content" --summary "one-liner" --json
-kasten note new "Title" --body-file /tmp/content.md --json  # Avoid shell escaping
-kasten note new "Title" --template concept --json           # Use a template
-kasten note update <id> --status evergreen --add-tag ml --summary "revised" --json
-kasten note update <id> --deprecate --superseded-by <new-id> --json
-```
-
-### Knowledge graph
-
-```bash
-kasten graph backlinks <id> --json    # What links to this note
-kasten graph hubs --json              # Most linked-to notes
-kasten graph broken --json            # Broken [[links]]
-kasten graph stub --json              # Create stubs for all broken links
-kasten graph orphans --json           # Notes with no connections
-```
-
-### Organize
-
-```bash
-kasten topic tree --json              # Hierarchical topic structure
-kasten batch tag-add ml --parent deep-learning --json
-kasten batch set-status review --tag unreviewed --json
-kasten batch deprecate --superseded-by new-note --tag old --json
-```
-
-### Maintain
-
-```bash
-kasten status --json                  # Vault overview
-kasten lint --json                    # 11 health check rules
-kasten repair --json                  # Full rebuild + fix links + promote + indexes
-kasten dedup --json                   # Find near-duplicate notes
-kasten sync                           # Rebuild index from files
-```
-
-### Advanced
-
-```bash
-kasten export json --json                      # Full JSON dump
-kasten export vault ./out --tag ml --json      # Export filtered subset
-kasten import ./other-kb --prefix imported --json
-kasten serve --port 8080                       # Web UI
-kasten watch                                   # Auto-sync on file changes
-kasten git log --json                          # Notes changed in git history
-```
-
-## LLM agent integration
-
-Every command supports `--json` for structured output with a consistent envelope:
+Every command returns consistent JSON:
 
 ```json
 {
@@ -150,35 +59,123 @@ Every command supports `--json` for structured output with a consistent envelope
 }
 ```
 
-### Agent config files
+## What's in a vault
 
-`kasten init` auto-injects usage documentation into agent config files so that any AI coding agent working in the repo knows how to use the knowledge base:
+```
+your-repo/
+  .kasten/             # Hidden: config, SQLite index, templates
+  knowledge/
+    notes/             # Markdown notes (the source of truth)
+    index/             # Auto-generated wiki pages
+  CLAUDE.md            # Agent docs (auto-injected)
+```
 
-| Flag | File created | Read by |
-|------|-------------|---------|
+Markdown files are the source of truth. The SQLite database is a derived cache, rebuilt anytime with `kasten sync --force`. Files outlast tools.
+
+## Note format
+
+```yaml
+---
+title: "Auth Architecture"
+id: "auth-architecture"
+tags: [auth, security, jwt]
+status: "evergreen"
+summary: "JWT auth with RS256 and refresh token rotation"
+---
+
+# Auth Architecture
+
+Content here. Link to other notes with [[session-management]] or [[jwt-tokens|JWT]].
+```
+
+kasten tracks `[[wiki-links]]` automatically -- backlinks, broken links, orphan notes, hub notes ranked by inbound link count.
+
+## Status lifecycle
+
+```
+draft --> review --> evergreen --> stale --> deprecated --> archive
+```
+
+`kasten repair` auto-promotes qualifying notes and auto-fills missing tags and summaries.
+
+## Commands
+
+```bash
+# Search
+kasten search "query" -j                         # FTS5 + BM25, returns bodies in JSON
+kasten search "query" --tag ml --status evergreen -j
+
+# Read
+kasten note show <id> -j                         # One note
+kasten note show <id1> <id2> <id3> -j            # Multiple at once
+
+# Create
+kasten note new "Title" --tag t --body-file f.md --summary "..." -j
+
+# Update
+kasten note update <id> --status evergreen --add-tag ml -j
+
+# Knowledge graph
+kasten graph backlinks <id> -j                   # What links here
+kasten graph hubs -j                             # Most-linked notes
+kasten graph broken -j                           # Broken links
+kasten graph stub -j                             # Auto-create stubs for broken links
+
+# Maintain
+kasten status -j                                 # Vault health overview
+kasten lint -j                                   # 11 health check rules
+kasten repair -j                                 # Full rebuild + fix + promote + index
+kasten tags -j                                   # All tags with counts
+
+# Bulk
+kasten batch tag-add ml --parent deep-learning -j
+kasten batch set-status review --tag unreviewed -j
+
+# Other
+kasten index build                               # Rebuild wiki index pages
+kasten dedup -j                                  # Find near-duplicates
+kasten export json -j                            # Full JSON dump
+kasten import ./other-kb -j                      # Import notes
+kasten serve                                     # Web UI with knowledge graph
+kasten watch                                     # Auto-sync on file changes
+kasten git log -j                                # Notes changed in git
+```
+
+## Agent config files
+
+`kasten init` auto-injects a usage guide into agent config files:
+
+| Flag | File | Read by |
+|------|------|---------|
 | `--agents claude` (default) | `CLAUDE.md` | Claude Code |
 | `--agents agents` | `AGENTS.md` | Cursor, Codex, Copilot, Windsurf, Amp, Devin |
 | `--agents gemini` | `GEMINI.md` | Gemini CLI |
 | `--agents copilot` | `.github/copilot-instructions.md` | GitHub Copilot |
 
-If any of these files already exist in the repo, kasten appends a marked section (idempotent -- safe to run repeatedly). Update with `kasten config agent-docs`.
+Existing files get a marked section appended (idempotent). Update anytime with `kasten config agent-docs`.
 
-### Agent workflow
+## MCP server (optional)
+
+For agents that can't shell out (Claude Desktop, Cursor inline):
 
 ```bash
-# Search with full bodies (one call instead of search + read)
-kasten search "auth" --include-body --json
-
-# Create a note (use --body-file for long content)
-echo "# Content" > /tmp/note.md
-kasten note new "Title" --body-file /tmp/note.md --summary "..." --json
-
-# Update metadata without touching body
-kasten note update auth-flow --status evergreen --add-tag reviewed --json
-
-# Fix everything
-kasten repair --json
+pip install llm-kasten[mcp]
 ```
+
+Add to `claude_desktop_config.json` or `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "kasten": {
+      "command": "kasten",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+8 read-only tools: `search_notes`, `read_note`, `read_many`, `list_notes`, `get_backlinks`, `get_hubs`, `vault_status`, `lint_vault`.
 
 ## Configuration
 
@@ -194,7 +191,9 @@ boost_evergreen = 1.5
 penalize_deprecated = 0.3
 ```
 
-See `kasten config show` for all settings.
+## Real-world usage
+
+Built and tested on a 600+ note LLM research knowledge base (300K+ words, 2600+ wiki-links, 375 tags). Handles search in under 10ms, full vault sync in under 2 seconds.
 
 ## Contributing
 

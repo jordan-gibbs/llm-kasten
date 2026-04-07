@@ -33,8 +33,8 @@ CSS = """
   --pre-fg: #e8d5b8;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Georgia, "Times New Roman", serif;
-       line-height: 1.7; color: var(--fg); background: var(--bg); }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+       line-height: 1.6; color: var(--fg); background: var(--bg); }
 a { color: var(--link); text-decoration: none; border-bottom: 1px solid transparent; }
 a:hover { border-bottom-color: var(--accent); }
 .wiki-link { color: var(--accent); font-weight: 600; }
@@ -42,7 +42,12 @@ a:hover { border-bottom-color: var(--accent); }
 .layout { display: flex; min-height: 100vh; }
 nav { width: var(--nav-width); min-width: 200px; max-width: 500px;
       background: var(--nav-bg); color: var(--nav-fg); padding: 1.2rem;
-      position: fixed; height: 100vh; overflow-y: auto; resize: horizontal; overflow-x: hidden; }
+      position: fixed; height: 100vh; overflow-y: auto; resize: horizontal; overflow-x: hidden;
+      display: flex; flex-direction: column; }
+nav .nav-top { flex: 1; overflow-y: auto; min-height: 0; }
+nav .nav-bottom { flex-shrink: 0; padding-top: 0.8rem; margin-top: 0.5rem;
+                  border-top: 1px solid rgba(255,255,255,0.1); }
+nav .nav-bottom a { font-size: 0.9rem; padding: 6px 0; }
 nav a { color: var(--nav-link); display: block; padding: 3px 0; font-size: 0.82rem;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -52,7 +57,7 @@ nav h3 { color: var(--nav-heading); margin: 1.2rem 0 0.4rem 0; font-size: 0.7rem
          text-transform: uppercase; letter-spacing: 0.08em;
          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 nav .brand { font-size: 1.2rem; font-weight: bold; color: #fff;
-             font-family: Georgia, serif; letter-spacing: 0.02em; }
+             letter-spacing: 0.02em; }
 nav .brand-sub { font-size: 0.7rem; color: var(--fg-dim); margin-top: -0.2rem; margin-bottom: 1rem;
                  font-family: -apple-system, sans-serif; }
 .nav-handle { width: 5px; position: fixed; left: var(--nav-width); top: 0; height: 100vh;
@@ -109,6 +114,9 @@ mark { background: #f0d8a0; color: var(--fg); padding: 1px 2px; border-radius: 2
 /* Graph page */
 .graph-container { position: relative; width: 100%; height: calc(100vh - 120px);
                    background: var(--bg-alt); border: 1px solid var(--border); border-radius: 6px; }
+.graph-fullpage { height: 100vh; border: none; border-radius: 0;
+                  position: fixed; top: 0; left: var(--nav-width); right: 0; bottom: 0;
+                  width: calc(100vw - var(--nav-width)); z-index: 1; }
 .graph-container canvas { width: 100%; height: 100%; cursor: grab; }
 .graph-container canvas:active { cursor: grabbing; }
 .graph-search { position: absolute; top: 12px; right: 12px; z-index: 5;
@@ -170,14 +178,30 @@ GRAPH_JS = """
 
   fetch('/api/graph').then(r => r.json()).then(function(data) {
     nodes = data.nodes; edges = data.edges;
-    nodes.forEach(function(n, i) { nodeMap[n.id] = i; n.x = W/2 + (Math.random()-0.5)*W*0.8; n.y = H/2 + (Math.random()-0.5)*H*0.8; n.vx = 0; n.vy = 0; });
+    // Center around origin
+    nodes.forEach(function(n, i) { nodeMap[n.id] = i; n.x = (Math.random()-0.5)*800; n.y = (Math.random()-0.5)*800; n.vx = 0; n.vy = 0; });
     simulate();
   });
+
+  function fitToScreen() {
+    if (nodes.length === 0) return;
+    var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    nodes.forEach(function(n) {
+      if (n.x < minX) minX = n.x; if (n.x > maxX) maxX = n.x;
+      if (n.y < minY) minY = n.y; if (n.y > maxY) maxY = n.y;
+    });
+    var gw = maxX - minX + 100, gh = maxY - minY + 100;
+    var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    scale = Math.min(W / gw, H / gh) * 0.9;
+    scale = Math.min(Math.max(scale, 0.02), 3);
+    panX = -cx;
+    panY = -cy;
+  }
 
   function simulate() {
     var alpha = 1.0;
     function tick() {
-      if (alpha < 0.001) { draw(); return; }
+      if (alpha < 0.001) { fitToScreen(); draw(); return; }
       alpha *= 0.98;
       // Repulsion
       for (var i = 0; i < nodes.length; i++) {
@@ -201,8 +225,8 @@ GRAPH_JS = """
       });
       // Center gravity
       nodes.forEach(function(n) {
-        n.vx += (W/2 - n.x) * 0.0005 * alpha;
-        n.vy += (H/2 - n.y) * 0.0005 * alpha;
+        n.vx += (0 - n.x) * 0.0005 * alpha;
+        n.vy += (0 - n.y) * 0.0005 * alpha;
         n.vx *= 0.85; n.vy *= 0.85;
         n.x += n.vx; n.y += n.vy;
       });
@@ -231,14 +255,14 @@ GRAPH_JS = """
       var s = nodes[si], t = nodes[ti];
       var highlight = hoverNode && (s.id === hoverNode.id || t.id === hoverNode.id);
       if (highlight) { ctx.strokeStyle = 'rgba(139,94,60,0.6)'; ctx.lineWidth = 1.5 / scale; }
-      ctx.beginPath(); ctx.moveTo(s.x - W/2, s.y - H/2); ctx.lineTo(t.x - W/2, t.y - H/2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(t.x, t.y); ctx.stroke();
       if (highlight) { ctx.strokeStyle = 'rgba(139,94,60,0.12)'; ctx.lineWidth = 0.5 / scale; }
     });
 
     // Nodes
     var sl = searchTerm.toLowerCase();
     nodes.forEach(function(n) {
-      var r = Math.max(2, Math.min(8, Math.sqrt(n.inbound + 1) * 2));
+      var r = Math.max(3, Math.min(20, 3 + Math.pow(n.inbound, 0.7) * 1.5));
       var isHover = hoverNode && n.id === hoverNode.id;
       var isConnected = hoverNode && n.connected && n.connected.has(hoverNode.id);
       var isSearch = sl && n.title.toLowerCase().includes(sl);
@@ -247,12 +271,12 @@ GRAPH_JS = """
 
       ctx.globalAlpha = alpha;
       ctx.fillStyle = isSearch ? '#c4652a' : isHover ? '#6b4226' : n.status === 'evergreen' ? '#8b5e3c' : n.status === 'draft' ? '#b8a080' : '#a08060';
-      ctx.beginPath(); ctx.arc(n.x - W/2, n.y - H/2, r / scale, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(n.x, n.y, r / scale, 0, Math.PI * 2); ctx.fill();
 
-      if ((isHover || isSearch) && scale > 0.3) {
+      if ((isHover || isSearch) && scale > 0.1) {
         ctx.fillStyle = '#3b2f1e';
         ctx.font = (11 / scale) + 'px -apple-system, sans-serif';
-        ctx.fillText(n.title.substring(0, 40), n.x - W/2 + r/scale + 4/scale, n.y - H/2 + 3/scale);
+        ctx.fillText(n.title.substring(0, 40), n.x + r/scale + 4/scale, n.y + 3/scale);
       }
       ctx.globalAlpha = 1;
     });
@@ -280,7 +304,7 @@ GRAPH_JS = """
   canvas.addEventListener('wheel', function(e) {
     e.preventDefault();
     var factor = e.deltaY > 0 ? 0.9 : 1.1;
-    scale = Math.min(Math.max(scale * factor, 0.1), 5);
+    scale = Math.min(Math.max(scale * factor, 0.02), 5);
     draw();
   });
   canvas.addEventListener('mousedown', function(e) { mouseDown = true; lastMX = e.clientX; lastMY = e.clientY; });
@@ -296,7 +320,7 @@ GRAPH_JS = """
       var wp = toWorld(e.clientX - rect.left, e.clientY - rect.top);
       hoverNode = null;
       for (var i = 0; i < nodes.length; i++) {
-        var dx = (nodes[i].x - W/2) - wp[0], dy = (nodes[i].y - H/2) - wp[1];
+        var dx = nodes[i].x - wp[0], dy = nodes[i].y - wp[1];
         if (dx*dx + dy*dy < 100) { hoverNode = nodes[i]; break; }
       }
       canvas.style.cursor = hoverNode ? 'pointer' : 'grab';
@@ -375,13 +399,13 @@ class KastenHandler(BaseHTTPRequestHandler):
         vault = self.__class__.vault
         name = vault.config.name
         lines = [
+            '<div class="nav-top">',
             '<div class="brand">LLM-Kasten</div>',
             f'<div class="brand-sub">{html_mod.escape(name)}</div>',
             '<form action="/search"><div class="search-box">'
             '<input type="text" name="q" placeholder="Search..."></div></form>',
             '<a href="/">Home</a>',
             '<a href="/tags">Tags</a>',
-            '<a href="/graph">Graph</a>',
             '<h3>Recent</h3>',
         ]
         rows = self.db.execute(
@@ -390,6 +414,19 @@ class KastenHandler(BaseHTTPRequestHandler):
         ).fetchall()
         for r in rows:
             lines.append(f'<a href="/note/{html_mod.escape(r["id"])}">{html_mod.escape(r["title"])}</a>')
+        lines.append('</div>')
+        lines.append(
+            '<div class="nav-bottom">'
+            '<a href="/graph" title="Knowledge Graph" style="display:flex;align-items:center;gap:6px">'
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+            '<circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/>'
+            '<circle cx="12" cy="18" r="2.5"/><circle cx="5" cy="18" r="2.5"/>'
+            '<circle cx="19" cy="18" r="2.5"/><circle cx="12" cy="10" r="2.5"/>'
+            '<line x1="7" y1="7" x2="10" y2="9"/><line x1="17" y1="7" x2="14" y2="9"/>'
+            '<line x1="12" y1="12.5" x2="12" y2="15.5"/>'
+            '<line x1="7" y1="17" x2="10" y2="16"/><line x1="17" y1="17" x2="14" y2="16"/>'
+            '</svg>Graph</a></div>'
+        )
         return "\n".join(lines)
 
     def _serve_index(self):
@@ -486,8 +523,7 @@ class KastenHandler(BaseHTTPRequestHandler):
 
     def _serve_graph(self):
         body = (
-            '<h1>Knowledge Graph</h1>'
-            '<div class="graph-container">'
+            '<div class="graph-container graph-fullpage">'
             '<canvas id="graph-canvas"></canvas>'
             '<input type="text" class="graph-search" id="graph-search" placeholder="Filter nodes...">'
             '<div class="graph-info" id="graph-info">Loading...</div>'
@@ -522,8 +558,12 @@ class KastenHandler(BaseHTTPRequestHandler):
 
 
 def run_server(vault, port: int = 8080, open_browser: bool = False):
+    import signal
+    import sys
+
     KastenHandler.vault = vault
     server = HTTPServer(("127.0.0.1", port), KastenHandler)
+    server.timeout = 0.5  # Check for Ctrl+C every 500ms
     url = f"http://127.0.0.1:{port}"
     print(f"Serving at {url}")
     print("Press Ctrl+C to stop.\n")
@@ -532,8 +572,17 @@ def run_server(vault, port: int = 8080, open_browser: bool = False):
         import webbrowser
         webbrowser.open(url)
 
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\nStopped.")
+    running = True
+
+    def _shutdown(sig, frame):
+        nonlocal running
+        running = False
+
+    signal.signal(signal.SIGINT, _shutdown)
+
+    while running:
+        server.handle_request()
+
+    print("\nStopped.")
     server.server_close()
+    sys.exit(0)

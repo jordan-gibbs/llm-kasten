@@ -1,4 +1,6 @@
-# kasten
+# LLM-Kasten: Agentic Knowledge Management
+
+![LLM-Kasten](assets/hero-graph.svg)
 
 A CLI knowledge base manager built on markdown files. Designed to be driven by both humans and LLM coding agents.
 
